@@ -358,7 +358,7 @@
   .plan-page.active { display: block; }
 
   /* ── Summary Boxes ── */
-  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
   .summary-box {
     background: var(--card);
     border: 1px solid var(--border);
@@ -371,7 +371,7 @@
 
   @media (max-width: 900px) {
     .grid-2 { grid-template-columns: 1fr; }
-    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .summary-grid { grid-template-columns: repeat(3, 1fr); }
   }
   @media print {
     header, .grid-2 > .card:first-child, .btn-group, .tabs { display: none !important; }
@@ -465,6 +465,10 @@
     <div style="font-size:.72rem;opacity:.65;margin-top:1px;">KI-Dienstplaner · CH/DE/AT · Feiertage automatisch</div>
   </div>
   <div style="margin-left:auto;display:flex;gap:10px;align-items:center;">
+    <button class="loc-badge" onclick="downloadApp()" title="App als HTML-Datei herunterladen"
+      style="background:rgba(245,158,11,.2);border-color:rgba(245,158,11,.4);">
+      ⬇️ App herunterladen
+    </button>
     <button class="loc-badge" onclick="changeLocation()" title="Standort ändern">
       📍 <span id="locationBadge">Standort wählen</span>
     </button>
@@ -537,11 +541,14 @@
             <li>Schulung (Wochentag z.B. "Dienstag")</li>
             <li>Krank (ja/nein)</li>
           </ul>
+          <div style="margin-top:8px;font-size:.78rem;color:#15803d;background:#f0fdf4;border-radius:6px;padding:6px 10px;">
+            ⬇️ <strong>Tipp:</strong> Lade die Vorlage herunter — sie enthält Beispieldaten mit allen Sonderfällen (Urlaub, Krank, Schulung) und eine Legende.
+          </div>
         </div>
 
         <div class="btn-group">
           <button class="btn btn-outline" onclick="loadDemoData()">🎮 Demo-Daten laden</button>
-          <button class="btn btn-outline" onclick="downloadTemplate()">⬇️ Vorlage</button>
+          <button class="btn btn-outline" onclick="downloadTemplate()">⬇️ Mitarbeiterliste</button>
           <button class="btn btn-outline" onclick="loadTemplate()">📂 Vorlage laden</button>
         </div>
       </div>
@@ -725,6 +732,27 @@
           </div>
         </div>
         <div class="form-group">
+          <label>Anzahl Gruppen <span style="font-size:.72rem;color:var(--muted);">(1–12 · Ø DE: 3,6 · Sachsen/MV: bis 12)</span></label>
+          <select id="numGruppen" onchange="updateGruppenConfig()">
+            <option value="1">1 Gruppe (Kleinst-Kita)</option>
+            <option value="2">2 Gruppen</option>
+            <option value="3">3 Gruppen</option>
+            <option value="4" selected>4 Gruppen (Standard)</option>
+            <option value="5">5 Gruppen</option>
+            <option value="6">6 Gruppen (große Kita)</option>
+            <option value="7">7 Gruppen</option>
+            <option value="8">8 Gruppen</option>
+            <option value="9">9 Gruppen</option>
+            <option value="10">10 Gruppen</option>
+            <option value="11">11 Gruppen</option>
+            <option value="12">12 Gruppen (Maximal-Kita)</option>
+          </select>
+          <div id="gruppenNamenBox" style="margin-top:8px;display:none;">
+            <div style="font-size:.72rem;font-weight:600;color:var(--muted);margin-bottom:4px;">Gruppennamen (optional anpassen):</div>
+            <div id="gruppenNamenFelder" style="display:flex;flex-direction:column;gap:4px;"></div>
+          </div>
+        </div>
+        <div class="form-group">
           <label>Mind. Fachkräfte pro Gruppe (Kernzeit)</label>
           <select id="minFach">
             <option value="1">1 Fachkraft</option>
@@ -811,9 +839,76 @@
 // ─────────────────────────────────────────────
 let staffData = [];
 const DAYS = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'];
+
+// ── Gruppen-Emojis für bis zu 12 Gruppen ──
+const GRUPPEN_EMOJIS = ['🐣','🦔','🌻','🐉','🦋','🌈','🐬','⭐','🦁','🌺','🐧','🦄'];
+const GRUPPEN_NAMEN_DEFAULT = [
+  'Krippe','Igel','Sonnenblumen','Drachen',
+  'Schmetterlinge','Regenbogen','Delfine','Sterne',
+  'Löwen','Blumen','Pinguine','Einhörner'
+];
+
+// Dynamisch — liest aktuelle Konfiguration
+function getNumGruppen() {
+  return parseInt(document.getElementById('numGruppen')?.value || '4');
+}
+
+function getGruppenNames() {
+  const n = getNumGruppen();
+  const names = [];
+  for (let i = 0; i < n; i++) {
+    const el = document.getElementById(`gruppenName_${i}`);
+    const custom = el?.value?.trim();
+    const def = GRUPPEN_NAMEN_DEFAULT[i] || `Gruppe ${i+1}`;
+    names.push(`Gruppe ${i+1} – ${custom || def} ${GRUPPEN_EMOJIS[i]}`);
+  }
+  return names;
+}
+
+function getGruppenKeys() {
+  const n = getNumGruppen();
+  return Array.from({length: n}, (_, i) => `Gruppe ${i+1}`);
+}
+
+// Rückwärtskompatibel
 const GRUPPEN = ['Gruppe 1 – Krippe 🐣','Gruppe 2 – Igel 🦔','Gruppe 3 – Sonnenblumen 🌻','Gruppe 4 – Drachen 🐉'];
 const GRUPPEN_SHORT = ['G1','G2','G3','G4'];
-const FARBEN = ['slot-g1','slot-g2','slot-g3','slot-g4'];
+const FARBEN = ['slot-g1','slot-g2','slot-g3','slot-g4','slot-g1','slot-g2','slot-g3','slot-g4','slot-g1','slot-g2','slot-g3','slot-g4'];
+
+// ── Gruppen-Konfiguration aktualisieren ──
+function updateGruppenConfig() {
+  const n = getNumGruppen();
+  const box = document.getElementById('gruppenNamenBox');
+  const felder = document.getElementById('gruppenNamenFelder');
+  if (!box || !felder) return;
+
+  // Nur ab 4+ Gruppen Namen anzeigen (darunter klar genug)
+  box.style.display = n >= 1 ? 'block' : 'none';
+  felder.innerHTML = '';
+
+  for (let i = 0; i < n; i++) {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:6px;';
+    row.innerHTML = `
+      <span style="font-size:.8rem;color:var(--muted);min-width:22px;">${GRUPPEN_EMOJIS[i]}</span>
+      <span style="font-size:.78rem;color:var(--muted);min-width:52px;font-weight:600;">Gr. ${i+1}</span>
+      <input id="gruppenName_${i}" type="text"
+        placeholder="${GRUPPEN_NAMEN_DEFAULT[i] || 'Name'}"
+        value="${GRUPPEN_NAMEN_DEFAULT[i] || ''}"
+        style="flex:1;padding:4px 8px;border:1px solid var(--border);border-radius:6px;
+               font-family:inherit;font-size:.8rem;background:#f8fafc;"/>
+    `;
+    felder.appendChild(row);
+  }
+
+  // Excel-Vorlage Hinweis aktualisieren
+  const hint = document.querySelector('.template-info ul li:first-child');
+  if (hint) hint.textContent = `Name, Qualifikation (ErzieherIn / Azubi / Hilfskraft)`;
+
+  const gruppeHint = document.querySelector('.template-info ul li:nth-child(2)');
+  if (gruppeHint) gruppeHint.textContent = `Gruppe (1–${n}), Wochenstunden`;
+}
+
 const PAUSEN = [
   { name:'Frühstück 🥐', start:'08:30', end:'09:00' },
   { name:'Mittagessen 🍽️', start:'12:00', end:'12:45' },
@@ -850,6 +945,9 @@ window.onload = () => {
   // Load saved AZ settings or apply law defaults
   loadSavedAzSettings();
   onAzChange(); // init preview & badge
+
+  // Init group config UI
+  updateGruppenConfig();
 };
 
 // ─────────────────────────────────────────────
@@ -870,7 +968,9 @@ function handleFile(file) {
 function parseStaffRow(r, i) {
   const name = r['Name'] || r['name'] || `Mitarbeiter ${i+1}`;
   const qual = (r['Qualifikation'] || r['qual'] || 'Hilfskraft').toString().trim();
-  const gruppe = parseInt(r['Gruppe'] || r['gruppe'] || ((i % 4) + 1));
+  const numG = getNumGruppen();
+  const rawGruppe = parseInt(r['Gruppe'] || r['gruppe'] || ((i % numG) + 1));
+  const gruppe = Math.max(1, Math.min(numG, rawGruppe)); // clamp to 1..numGruppen
   const stunden = parseFloat(r['Wochenstunden'] || r['stunden'] || 38.5);
   const urlaubVon = parseDate(r['Urlaub_Von'] || r['urlaub_von'] || '');
   const urlaubBis = parseDate(r['Urlaub_Bis'] || r['urlaub_bis'] || '');
@@ -987,6 +1087,8 @@ async function generatePlan() {
     meetingDay: document.getElementById('meetingDay').value,
     meetingTime: document.getElementById('meetingTime').value,
     minFach: parseInt(document.getElementById('minFach').value),
+    numGruppen: getNumGruppen(),
+    gruppenNames: getGruppenNames(),
   };
 
   const prompt = buildPrompt(params);
@@ -1084,7 +1186,7 @@ PARAMETER:
 - RANDSTUNDEN: 06:45–07:45 und 17:15–18:15: je 1 ErzieherIn + 1 Hilfskraft für ALLE Gruppen
 - KERNZEIT: 07:45–17:15 – Früh / Mitte / Spät
 - Wochenstunden-Soll: ${law.wochenSoll}h / 5 Tage = ${(law.wochenSoll/5).toFixed(1)}h Soll netto pro Tag
-- 4 Kita-Gruppen (Gruppe 1–4)
+- ${p.numGruppen} Kita-Gruppen (Gruppe 1–${p.numGruppen}): ${p.gruppenNames.join(', ')}
 - Team-Meeting: jeden ${p.meetingDay} ab ${p.meetingTime} Uhr
 - Mind. ${p.minFach} ErzieherIn pro Gruppe in Kernzeit
 - Wochen: ${JSON.stringify(weekLabels)}
@@ -1451,7 +1553,21 @@ function updateLawInfoBox(land) {
   box.style.borderColor = land==='DE'?'#bfdbfe':land==='AT'?'#ddd6fe':'#bbf7d0';
 }
 
-function changeLocation() {
+// ─────────────────────────────────────────────
+// APP SELBST HERUNTERLADEN
+// ─────────────────────────────────────────────
+function downloadApp() {
+  const html = document.documentElement.outerHTML;
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'KitaShiftKI_App.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
   localStorage.removeItem('kitashift_location');
   window._location = null;
   document.getElementById('locationModal').style.display = 'flex';
@@ -1853,6 +1969,7 @@ function generateLocalPlan(params) {
   const weeks = [];
   let totalSlots = 0, abwesend = 0, schulungen = 0;
   const warnings = [];
+  const numG = params.numGruppen || numG; // use param or current UI value
 
   // ── Landesspezifische Werte ──
   const law = getLaw();
@@ -1881,7 +1998,7 @@ function generateLocalPlan(params) {
       // ── FEIERTAG: Kita geschlossen (gesetzlich) ──
       if (feiertag && feiertag.typ === 'gesetzlich') {
         // Alle Mitarbeiter als "Feiertag" eintragen, Kita zu
-        for (let g = 1; g <= 4; g++) {
+        for (let g = 1; g <= numG; g++) {
           days[day][`Gruppe ${g}`] = staffData.filter(s => s.gruppe === g).map(s => ({
             name: s.name, zeit: '–', typ: 'feiertag', schicht: 'feiertag', grund: `🎉 ${feiertag.name}`
           }));
@@ -1970,7 +2087,7 @@ function generateLocalPlan(params) {
       if (randSpaetHilf && randSpaetHilf.name !== randSpaetFach?.name) { const sl = assignShift(randSpaetHilf, 'randSpaet', true); if (sl) days[day]['Randdienst'].push({ ...sl, info: 'Spätdienst Unterstützung' }); }
 
       // ── GRUPPENBESETZUNG (Kerndienst) ──
-      for (let g = 1; g <= 4; g++) {
+      for (let g = 1; g <= numG; g++) {
         const groupSlots = [];
         staffData.filter(s => s.gruppe === g).forEach((s, si) => {
           const isUrlaub = s.urlaubVon && s.urlaubBis && dayDate >= s.urlaubVon && dayDate <= s.urlaubBis;
@@ -2072,7 +2189,11 @@ function renderPlan(plan, params) {
 
   // Stats
   html += `
-    <div class="summary-grid">
+    <div class="summary-grid" style="grid-template-columns:repeat(5,1fr);">
+      <div class="summary-box">
+        <div class="summary-num">${params.numGruppen || getNumGruppen()}</div>
+        <div class="summary-label">Gruppen</div>
+      </div>
       <div class="summary-box">
         <div class="summary-num">${staffData.length}</div>
         <div class="summary-label">Mitarbeiter</div>
@@ -2248,7 +2369,7 @@ function showMonatsübersicht() {
         return;
       }
       let found = null;
-      for (let g = 1; g <= 4; g++) {
+      for (let g = 1; g <= getNumGruppen(); g++) {
         const slots = (week.days[day]?.[`Gruppe ${g}`]) || [];
         const sl = slots.find(sl => sl.name === s.name);
         if (sl) { found = sl; break; }
@@ -2349,7 +2470,7 @@ function exportIcal() {
       // Für jeden Mitarbeiter einen Termin
       staffData.forEach(s => {
         let slot = null;
-        for (let g = 1; g <= 4; g++) {
+        for (let g = 1; g <= getNumGruppen(); g++) {
           const sl = (wk.days[day]?.[`Gruppe ${g}`] || []).find(x => x.name === s.name);
           if (sl) { slot = sl; break; }
         }
@@ -2566,9 +2687,11 @@ function renderWeekTable(wk, wi) {
   }
 
   // ── GROUPS ──
-  for (let g = 0; g < 4; g++) {
+  const gruppenColors = ['#1e40af','#15803d','#854d0e','#9d174d','#7c3aed','#0369a1','#b45309','#be185d','#065f46','#9a3412','#1e3a5f','#4a1d96'];
+  const gruppenNames = getGruppenNames();
+  for (let g = 0; g < getNumGruppen(); g++) {
     const gKey = `Gruppe ${g+1}`;
-    html += `<tr class="gruppe-row"><td colspan="6" style="background:${['#1e40af','#15803d','#854d0e','#9d174d'][g]}">${GRUPPEN[g]}</td></tr>`;
+    html += `<tr class="gruppe-row"><td colspan="6" style="background:${gruppenColors[g] || '#1e40af'}">${gruppenNames[g] || gKey}</td></tr>`;
     staffData.filter(s => s.gruppe === g+1).forEach(staff => {
       html += `<tr><td style="font-weight:600;font-size:.82rem;">${staff.name}<br><span style="font-weight:400;color:var(--muted);font-size:.72rem;">${staff.qual}</span></td>`;
       dayMetas.forEach(({day, ft}) => {
@@ -2642,8 +2765,9 @@ function exportExcel() {
   const wb = XLSX.utils.book_new();
   plan.weeks.forEach((wk, wi) => {
     const rows = [['Bereich / Mitarbeiter', ...DAYS]];
-    for (let g = 0; g < 4; g++) {
-      rows.push([GRUPPEN[g], '', '', '', '', '']);
+    const gNames = getGruppenNames();
+    for (let g = 0; g < getNumGruppen(); g++) {
+      rows.push([gNames[g] || `Gruppe ${g+1}`, '', '', '', '', '']);
       staffData.filter(s => s.gruppe === g+1).forEach(staff => {
         const row = [staff.name];
         DAYS.forEach(day => {
@@ -2667,20 +2791,175 @@ function exportExcel() {
 // ─────────────────────────────────────────────
 function downloadTemplate() {
   const wb = XLSX.utils.book_new();
+
+  // ── Blatt 1: Mitarbeiterdaten (vollständige Testdaten) ──
   const data = [
     ['Name','Qualifikation','Gruppe','Wochenstunden','Urlaub_Von','Urlaub_Bis','Schulung','Krank'],
-    ['Anna Müller','ErzieherIn',1,38.5,'','','','nein'],
-    ['Klaus Weber','ErzieherIn',1,38.5,'','','Mittwoch','nein'],
-    ['Sarah Schmidt','Azubi',2,39,'','','','nein'],
-    ['Petra Bauer','ErzieherIn',2,30,'31.03.2025','04.04.2025','','nein'],
-    ['Tom Fischer','Hilfskraft',3,20,'','','Dienstag','nein'],
-    ['Maria Gonzalez','ErzieherIn',4,38.5,'','','','ja'],
+    ['Anna Müller',      'ErzieherIn', 1, 42, '',           '',           '',           'nein'],
+    ['Klaus Weber',      'ErzieherIn', 1, 42, '',           '',           'Mittwoch',   'nein'],
+    ['Sarah Schmidt',    'Azubi',      1, 40, '',           '',           '',           'nein'],
+    ['Petra Bauer',      'ErzieherIn', 2, 42, '07.04.2026', '11.04.2026', '',           'nein'],
+    ['Tom Fischer',      'ErzieherIn', 2, 42, '',           '',           '',           'nein'],
+    ['Lisa Hoffmann',    'Hilfskraft', 2, 20, '',           '',           'Donnerstag', 'nein'],
+    ['Maria Gonzalez',   'ErzieherIn', 3, 42, '',           '',           '',           'ja'],
+    ['Jan Richter',      'ErzieherIn', 3, 42, '',           '',           '',           'nein'],
+    ['Luisa König',      'Azubi',      3, 40, '',           '',           'Dienstag',   'nein'],
+    ['Hans Braun',       'ErzieherIn', 4, 42, '',           '',           '',           'nein'],
+    ['Susanne Wolf',     'ErzieherIn', 4, 32, '14.04.2026', '17.04.2026', '',           'nein'],
+    ['Fatima Al-Hassan', 'Hilfskraft', 4, 25, '',           '',           'Freitag',    'nein'],
   ];
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  ws['!cols'] = [20,18,10,14,14,14,14,10].map(w => ({ wch: w }));
-  XLSX.utils.book_append_sheet(wb, ws, 'Mitarbeiter');
-  XLSX.writeFile(wb, 'KitaShiftKI_Vorlage.xlsx');
+  const ws1 = XLSX.utils.aoa_to_sheet(data);
+  ws1['!cols'] = [22,16,10,14,14,14,16,10].map(w => ({ wch: w }));
+
+  // Kopfzeile formatieren
+  const headerStyle = {
+    font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 10 },
+    fill: { fgColor: { rgb: '1A3A5C' } },
+    alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+    border: { top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'thin'}, right:{style:'thin'} }
+  };
+  ['A1','B1','C1','D1','E1','F1','G1','H1'].forEach(ref => {
+    if (ws1[ref]) ws1[ref].s = headerStyle;
+  });
+
+  // Datenzeilen abwechselnd einfärben
+  const qualColors = { 'ErzieherIn':'15803D', 'Azubi':'B45309', 'Hilfskraft':'6B7280' };
+  for (let r = 2; r <= 13; r++) {
+    const even = r % 2 === 0;
+    const bg = even ? 'E8F4FD' : 'FFFFFF';
+    for (let c = 0; c < 8; c++) {
+      const ref = XLSX.utils.encode_cell({ r: r-1, c });
+      if (!ws1[ref]) ws1[ref] = { v: '', t: 's' };
+      const col = c + 1;
+      let fontColor = '000000';
+      if (col === 2) fontColor = qualColors[ws1[ref].v] || '000000';
+      if (col === 8 && ws1[ref].v === 'ja') fontColor = 'DC2626';
+      if (col === 7 && ws1[ref].v) fontColor = '7C3AED';
+      if ((col === 5 || col === 6) && ws1[ref].v) fontColor = '0369A1';
+      ws1[ref].s = {
+        font: { name: 'Arial', sz: 10, color: { rgb: fontColor }, bold: col === 2 },
+        fill: { fgColor: { rgb: bg } },
+        alignment: { horizontal: 'center', vertical: 'center' },
+        border: { top:{style:'thin',color:{rgb:'CBD5E1'}}, bottom:{style:'thin',color:{rgb:'CBD5E1'}}, left:{style:'thin',color:{rgb:'CBD5E1'}}, right:{style:'thin',color:{rgb:'CBD5E1'}} }
+      };
+    }
+  }
+
+  // Hinweise unterhalb der Tabelle
+  const hinweise = [
+    [''],
+    ['ℹ️  Pflichtfelder: Name, Qualifikation, Gruppe, Wochenstunden'],
+    ['   Qualifikation: ErzieherIn | Azubi | Hilfskraft'],
+    ['   Urlaub_Von / Urlaub_Bis: Format TT.MM.JJJJ (leer = kein Urlaub)'],
+    ['   Schulung: Wochentag z.B. Montag, Dienstag ... (leer = keine)'],
+    ['   Krank: ja | nein'],
+  ];
+  XLSX.utils.sheet_add_aoa(ws1, hinweise, { origin: { r: 14, c: 0 } });
+  for (let r = 15; r <= 20; r++) {
+    const ref = XLSX.utils.encode_cell({ r: r-1, c: 0 });
+    if (ws1[ref]) ws1[ref].s = { font: { italic: true, color: { rgb: '64748B' }, sz: 9 } };
+  }
+
+  XLSX.utils.book_append_sheet(wb, ws1, 'Mitarbeiterdaten');
+
+  // ── Blatt 2: Leere Vorlage ──
+  const vorlageData = [
+    ['Name','Qualifikation','Gruppe','Wochenstunden','Urlaub_Von','Urlaub_Bis','Schulung','Krank'],
+  ];
+  for (let i = 0; i < 20; i++) vorlageData.push(['','','','','','','','']);
+  vorlageData.push(['']);
+  vorlageData.push(['→ Diese Vorlage ausfüllen und in KitaShift·KI importieren']);
+
+  const ws2 = XLSX.utils.aoa_to_sheet(vorlageData);
+  ws2['!cols'] = [22,16,10,14,14,14,16,10].map(w => ({ wch: w }));
+  ['A1','B1','C1','D1','E1','F1','G1','H1'].forEach(ref => {
+    if (ws2[ref]) ws2[ref].s = headerStyle;
+  });
+  for (let r = 2; r <= 21; r++) {
+    const even = r % 2 === 0;
+    for (let c = 0; c < 8; c++) {
+      const ref = XLSX.utils.encode_cell({ r: r-1, c });
+      if (!ws2[ref]) ws2[ref] = { v: '', t: 's' };
+      ws2[ref].s = {
+        fill: { fgColor: { rgb: even ? 'F8FAFC' : 'FFFFFF' } },
+        border: { top:{style:'thin',color:{rgb:'CBD5E1'}}, bottom:{style:'thin',color:{rgb:'CBD5E1'}}, left:{style:'thin',color:{rgb:'CBD5E1'}}, right:{style:'thin',color:{rgb:'CBD5E1'}} },
+        alignment: { horizontal: 'center', vertical: 'center' }
+      };
+    }
+  }
+  const hinRef = XLSX.utils.encode_cell({ r: 22, c: 0 });
+  if (ws2[hinRef]) ws2[hinRef].s = { font: { bold: true, italic: true, color: { rgb: '1A3A5C' }, sz: 9 } };
+  XLSX.utils.book_append_sheet(wb, ws2, 'Vorlage (leer)');
+
+  // ── Blatt 3: Legende ──
+  const legendeData = [
+    ['KitaShift·KI — Import-Format Dokumentation', '', ''],
+    [''],
+    ['Spalte', 'Beschreibung', 'Beispiel / erlaubte Werte'],
+    ['Name', 'Vollständiger Name', 'Anna Müller'],
+    ['Qualifikation', 'Rolle im Team (genau so schreiben)', 'ErzieherIn | Azubi | Hilfskraft'],
+    ['Gruppe', 'Kita-Gruppe 1 bis 4', '1 | 2 | 3 | 4'],
+    ['Wochenstunden', 'Vertragliche Stunden/Woche (Zahl)', '42 | 39 | 32 | 20'],
+    ['Urlaub_Von', 'Urlaubsbeginn — leer lassen wenn kein Urlaub', '07.04.2026'],
+    ['Urlaub_Bis', 'Urlaubsende — leer lassen wenn kein Urlaub', '11.04.2026'],
+    ['Schulung', 'Wochentag der Schulung — leer lassen wenn keine', 'Montag | Dienstag | Mittwoch | ...'],
+    ['Krank', 'Ist die Person aktuell krank?', 'ja | nein'],
+    [''],
+    ['WICHTIG: Spaltenüberschriften NICHT verändern — exakt so wie oben angegeben','',''],
+    ['WICHTIG: Qualifikation genau schreiben: ErzieherIn (mit großem I am Ende)','',''],
+    ['WICHTIG: Datumsformat immer TT.MM.JJJJ (vierstellige Jahreszahl)','',''],
+    ['WICHTIG: Krank immer klein: ja oder nein (keine anderen Werte)','',''],
+  ];
+  const ws3 = XLSX.utils.aoa_to_sheet(legendeData);
+  ws3['!cols'] = [22, 38, 36].map(w => ({ wch: w }));
+
+  // Titel
+  ws3['A1'].s = { font: { bold: true, color: { rgb: '1A3A5C' }, sz: 13 } };
+  // Header-Zeile
+  ['A3','B3','C3'].forEach(ref => {
+    if (ws3[ref]) ws3[ref].s = headerStyle;
+  });
+  // Datenzeilen
+  for (let r = 4; r <= 11; r++) {
+    const even = r % 2 === 0;
+    for (let c = 0; c < 3; c++) {
+      const ref = XLSX.utils.encode_cell({ r: r-1, c });
+      if (!ws3[ref]) ws3[ref] = { v: '', t: 's' };
+      ws3[ref].s = {
+        font: { sz: 10 },
+        fill: { fgColor: { rgb: even ? 'E8F4FD' : 'FFFFFF' } },
+        border: { top:{style:'thin',color:{rgb:'CBD5E1'}}, bottom:{style:'thin',color:{rgb:'CBD5E1'}}, left:{style:'thin',color:{rgb:'CBD5E1'}}, right:{style:'thin',color:{rgb:'CBD5E1'}} },
+        alignment: { vertical: 'center', wrapText: true }
+      };
+    }
+  }
+  // Wichtig-Zeilen
+  for (let r = 13; r <= 16; r++) {
+    const ref = XLSX.utils.encode_cell({ r: r-1, c: 0 });
+    if (ws3[ref]) ws3[ref].s = {
+      font: { bold: true, color: { rgb: 'DC2626' }, sz: 9 },
+      fill: { fgColor: { rgb: 'FEF2F2' } }
+    };
+  }
+  XLSX.utils.book_append_sheet(wb, ws3, 'Legende & Hilfe');
+
+  XLSX.writeFile(wb, 'KitaShiftKI_Mitarbeiterliste.xlsx');
 }
+
+// ─────────────────────────────────────────────
+// APP SELBST HERUNTERLADEN
+// ─────────────────────────────────────────────
+function downloadApp() {
+  const html = document.documentElement.outerHTML;
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'KitaShiftKI_app.html';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 </script>
 </body>
 </html>
