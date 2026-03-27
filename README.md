@@ -20,8 +20,8 @@
 | Plan | Preis | Zielgruppe |
 |---|---|---|
 | **KitaShift·KI Free** | CHF 0 | bis 5 MA, dauerhaft kostenlos |
-| **KitaShift·KI Pro** | CHF 19/Mo · CHF 159/Jahr | bis 20 MA, KI-Vollzugang |
-| **KitaShift·KI Träger** | CHF 49/Mo | bis 3 Standorte, White-Label |
+| **KitaShift·KI Pro** | CHF 18/Mo · CHF 154/Jahr | bis 20 MA, KI-Vollzugang |
+| **KitaShift·KI Träger** | CHF 48/Mo | bis 3 Standorte, White-Label |
 | **Einmallizenz Solo** | CHF 79 | lebenslang, bis 5 MA |
 | **Einmallizenz Pro** | CHF 149 | lebenslang, bis 20 MA |
 
@@ -30,7 +30,7 @@
 ### Planung
 - ✅ KI-automatische Wochenplanung (Claude AI)
 - ✅ 1- & 2-Wochen-Plan auf Knopfdruck
-- ✅ 4 Kita-Gruppen mit Qualifikationsprüfung
+- ✅ 1–12 Kita-Gruppen mit Qualifikationsprüfung
 - ✅ Randstunden-Logik 06:45–07:45 / 17:15–18:15
 - ✅ Excel Import (eigene Datei) & Export
 
