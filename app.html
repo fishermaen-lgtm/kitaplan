@@ -1568,6 +1568,8 @@ function downloadApp() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+function changeLocation() {
   localStorage.removeItem('kitashift_location');
   window._location = null;
   document.getElementById('locationModal').style.display = 'flex';
@@ -2631,6 +2633,8 @@ function applyTemplate(idx) {
   document.querySelectorAll('div[style*=fixed]').forEach(d => d.remove());
   alert(`✅ Vorlage „${t.name}" geladen — ${staffData.length} Mitarbeitende bereit.`);
 }
+
+function showModal(html) {
   const div = document.createElement('div');
   div.style = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;';
   div.innerHTML = `<div style="background:white;border-radius:16px;padding:28px;max-width:820px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);">
