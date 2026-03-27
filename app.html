@@ -5,7 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>KitaShift·KI v1.0 – KI-Dienstplaner CH/DE/AT</title>
 <meta name="description" content="KI-gestützter Dienstplaner für Kitas in CH, DE & AT. 1–12 Gruppen, alle 26 Kantone, 16 Bundesländer, 9 AT-Bundesländer. CH ArG, DE ArbZG, AT AZG konform."/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+  onerror="document.getElementById('xlsxWarn')&&(document.getElementById('xlsxWarn').style.display='block')">
+</script>
+<script>
+// XLSX Ladecheck — wird nach 3 Sekunden geprüft
+setTimeout(() => {
+  if (typeof XLSX === 'undefined') {
+    const w = document.getElementById('xlsxWarn');
+    if (w) w.style.display = 'block';
+  }
+}, 3000);
+</script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap');
 
@@ -528,9 +539,21 @@
         <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
           <div class="upload-icon">📊</div>
           <p><strong>Excel-Datei hochladen</strong></p>
-          <p style="margin-top:4px">oder Demo-Daten verwenden</p>
+          <p style="margin-top:4px">Klicken oder Datei hierher ziehen</p>
         </div>
-        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" />
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv"
+               onchange="if(this.files[0]) handleFile(this.files[0])" />
+
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:10px;"
+                onclick="document.getElementById('fileInput').click()">
+          📂 Excel-Datei auswählen & hochladen
+        </button>
+
+        <div id="xlsxWarn" style="display:none;margin-top:8px;background:#fff3cd;border:1px solid #f59e0b;
+             border-radius:8px;padding:8px 12px;font-size:.78rem;color:#92400e;">
+          ⚠️ <strong>Excel-Bibliothek nicht geladen.</strong><br/>
+          Bitte kurz Internet prüfen und Seite neu laden. Die Bibliothek wird einmalig von cdnjs.cloudflare.com geladen.
+        </div>
 
         <div class="template-info" style="margin-top:12px;">
           <strong>📋 Benötigte Excel-Spalten:</strong>
@@ -544,6 +567,10 @@
           <div style="margin-top:8px;font-size:.78rem;color:#15803d;background:#f0fdf4;border-radius:6px;padding:6px 10px;">
             ⬇️ <strong>Tipp:</strong> Lade die Vorlage herunter — sie enthält Beispieldaten mit allen Sonderfällen (Urlaub, Krank, Schulung) und eine Legende.
           </div>
+          <button class="btn btn-outline" onclick="downloadTemplate()"
+            style="width:100%;justify-content:center;margin-top:6px;font-size:.82rem;color:#15803d;border-color:#bbf7d0;background:#f0fdf4;">
+            ⬇️ Muster-Excel herunterladen (mit Beispieldaten)
+          </button>
         </div>
 
         <div class="btn-group">
@@ -836,6 +863,18 @@
   </div>
 </div>
 
+<!-- ── APP FOOTER ── -->
+<div style="background:#1a3a5c;color:rgba(255,255,255,.5);text-align:center;padding:14px 24px;font-size:.75rem;margin-top:32px;">
+  <strong style="color:rgba(255,255,255,.8);">KitaShift·KI</strong> &nbsp;·&nbsp; © 2026 save-house.de &nbsp;·&nbsp;
+  <a href="https://kitaplan.save-house.de" style="color:rgba(255,255,255,.5);text-decoration:none;" target="_blank">kitaplan.save-house.de</a>
+  &nbsp;·&nbsp;
+  <a href="https://kitaplan.save-house.de#datenschutz" style="color:rgba(255,255,255,.5);text-decoration:none;" target="_blank">Datenschutz</a>
+  &nbsp;·&nbsp;
+  <a href="https://kitaplan.save-house.de#impressum" style="color:rgba(255,255,255,.5);text-decoration:none;" target="_blank">Impressum</a>
+  &nbsp;·&nbsp;
+  <span>🇨🇭 CH ArG &nbsp;·&nbsp; 🇩🇪 DE ArbZG &nbsp;·&nbsp; 🇦🇹 AT AZG</span>
+</div>
+
 <script>
 // ─────────────────────────────────────────────
 // DATA & STATE
@@ -929,7 +968,7 @@ window.onload = () => {
   d.setDate(d.getDate() + (day === 1 ? 0 : diff));
   document.getElementById('startDate').value = d.toISOString().split('T')[0];
 
-  // Drag & drop
+  // Drag & drop auf Upload-Zone
   const zone = document.getElementById('uploadZone');
   zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
   zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
@@ -937,9 +976,6 @@ window.onload = () => {
     e.preventDefault(); zone.classList.remove('drag-over');
     const file = e.dataTransfer.files[0];
     if (file) handleFile(file);
-  });
-  document.getElementById('fileInput').addEventListener('change', e => {
-    if (e.target.files[0]) handleFile(e.target.files[0]);
   });
 
   // Init location selector (shows modal if not yet set)
@@ -957,15 +993,161 @@ window.onload = () => {
 // EXCEL IMPORT
 // ─────────────────────────────────────────────
 function handleFile(file) {
+  // ── Check 1: Datei vorhanden? ──
+  if (!file) {
+    showUploadError('Keine Datei ausgewählt.');
+    return;
+  }
+
+  // ── Check 2: Dateityp ──
+  const name = file.name.toLowerCase();
+  if (!name.endsWith('.xlsx') && !name.endsWith('.xls') && !name.endsWith('.csv')) {
+    showUploadError(`❌ Dateiformat nicht unterstützt: „${file.name}"\nBitte eine .xlsx oder .csv Datei auswählen.`);
+    return;
+  }
+
+  // ── Check 3: XLSX-Bibliothek geladen? ──
+  if (typeof XLSX === 'undefined') {
+    showUploadError('❌ Excel-Bibliothek noch nicht geladen.\nBitte kurz warten und erneut versuchen.\n(Internetverbindung für den ersten Start erforderlich)');
+    return;
+  }
+
+  // ── Upload-Zone: Ladeindikator ──
+  const zone = document.getElementById('uploadZone');
+  const origHTML = zone.innerHTML;
+  zone.innerHTML = `<div class="upload-icon">⏳</div><p><strong>Datei wird gelesen…</strong></p><p style="margin-top:4px;font-size:.8rem;color:var(--muted);">${file.name}</p>`;
+  zone.style.borderColor = '#3b82f6';
+  zone.style.background  = '#eff6ff';
+
+  // ── CSV direkt verarbeiten ──
+  if (name.endsWith('.csv')) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(e.target.result, { type: 'string' });
+        processWorkbook(wb, file.name, zone);
+      } catch(err) {
+        zone.innerHTML = origHTML;
+        zone.style.borderColor = '';
+        zone.style.background  = '';
+        showUploadError(`❌ Fehler beim Lesen der CSV-Datei:\n${err.message}`);
+      }
+    };
+    reader.onerror = () => showUploadError('❌ Datei konnte nicht gelesen werden.');
+    reader.readAsText(file, 'UTF-8');
+    return;
+  }
+
+  // ── XLSX / XLS verarbeiten ──
   const reader = new FileReader();
   reader.onload = e => {
-    const wb = XLSX.read(e.target.result, { type:'array', cellDates:true });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(ws, { defval:'' });
-    staffData = rows.map((r, i) => parseStaffRow(r, i));
-    renderStaffPreview();
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb   = XLSX.read(data, { type: 'array', cellDates: true });
+      processWorkbook(wb, file.name, zone);
+    } catch(err) {
+      zone.innerHTML = origHTML;
+      zone.style.borderColor = '';
+      zone.style.background  = '';
+      showUploadError(
+        `❌ Fehler beim Lesen der Excel-Datei:\n${err.message}\n\n` +
+        `Tipps:\n• Stelle sicher dass die Datei nicht beschädigt ist\n` +
+        `• Speichere die Datei neu als .xlsx\n` +
+        `• Prüfe ob alle Pflicht-Spalten vorhanden sind`
+      );
+    }
+  };
+  reader.onerror = () => {
+    zone.innerHTML = origHTML;
+    zone.style.borderColor = '';
+    zone.style.background  = '';
+    showUploadError('❌ Datei konnte nicht gelesen werden. Bitte erneut versuchen.');
   };
   reader.readAsArrayBuffer(file);
+}
+
+function processWorkbook(wb, fileName, zone) {
+  const sheetName = wb.SheetNames[0];
+  if (!sheetName) throw new Error('Keine Tabellen in der Datei gefunden.');
+
+  const ws   = wb.Sheets[sheetName];
+  const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+  if (rows.length === 0) {
+    throw new Error(`Das Blatt „${sheetName}" enthält keine Daten.\nBitte prüfe ob die erste Zeile die Spaltenüberschriften enthält.`);
+  }
+
+  // Spalten prüfen
+  const firstRow = rows[0];
+  const hasName = 'Name' in firstRow || 'name' in firstRow;
+  if (!hasName) {
+    throw new Error(
+      `Spalte „Name" nicht gefunden.\nGefundene Spalten: ${Object.keys(firstRow).join(', ')}\n\n` +
+      `Bitte stelle sicher dass die erste Zeile die Spaltenüberschriften enthält:\nName, Qualifikation, Gruppe, Wochenstunden, ...`
+    );
+  }
+
+  // ── Nur echte Mitarbeiter-Zeilen filtern ──
+  // Ungültige Zeilen werden aussortiert:
+  // - Leere Name-Spalte
+  // - Name beginnt mit ?, ℹ, *, //, # (Hinweiszeilen aus der Vorlage)
+  // - Name ist länger als 60 Zeichen (kein echter Name)
+  // - Wochenstunden ist 0 oder kein numerischer Wert
+  const HINWEIS_PRÄFIXE = ['?', 'ℹ', '*', '//', '#', '→', '•', '-'];
+  const validRows = rows.filter(r => {
+    const name = (r['Name'] || r['name'] || '').toString().trim();
+    if (!name) return false;
+    if (HINWEIS_PRÄFIXE.some(p => name.startsWith(p))) return false;
+    if (name.length > 80) return false;
+    // Qualifikation muss eine der bekannten Werte sein ODER leer (dann wird Hilfskraft gesetzt)
+    const qual = (r['Qualifikation'] || r['qual'] || '').toString().trim().toLowerCase();
+    const validQuals = ['erzieherin', 'erzieher', 'azubi', 'hilfskraft', ''];
+    const qualOk = validQuals.some(q => qual.includes(q) || qual === '');
+    if (!qualOk) return false;
+    return true;
+  });
+
+  if (validRows.length === 0) {
+    throw new Error(
+      'Keine gültigen Mitarbeitenden-Zeilen gefunden.\n\n' +
+      `Gefunden: ${rows.length} Zeilen gesamt, aber keine mit gültigem Namen und Qualifikation.\n` +
+      'Bitte prüfe: Enthält die Datei Spalten "Name" und "Qualifikation"?'
+    );
+  }
+
+  // Daten parsen
+  staffData = validRows.map((r, i) => parseStaffRow(r, i)).filter(s => s.name.trim() !== '');
+
+  // Meldung wenn Zeilen gefiltert wurden
+  const gefiltert = rows.length - validRows.length;
+  const hinweisMsg = gefiltert > 0
+    ? ` (${gefiltert} Hinweis-Zeilen ignoriert)`
+    : '';
+
+  // ── Erfolg: Upload-Zone aktualisieren ──
+  const zone2 = zone || document.getElementById('uploadZone');
+  zone2.innerHTML = `
+    <div class="upload-icon">✅</div>
+    <p><strong>${staffData.length} Mitarbeitende geladen${hinweisMsg}</strong></p>
+    <p style="margin-top:4px;font-size:.8rem;color:var(--muted);">${fileName} · Blatt: ${sheetName}</p>
+    <p style="margin-top:4px;font-size:.75rem;color:#3b82f6;">Klick zum Ersetzen</p>`;
+  zone2.style.borderColor = '#22c55e';
+  zone2.style.background  = '#f0fdf4';
+
+  renderStaffPreview();
+}
+
+function showUploadError(msg) {
+  alert(msg);
+  // Zone zurücksetzen
+  const zone = document.getElementById('uploadZone');
+  zone.innerHTML = `<div class="upload-icon">📊</div><p><strong>Excel-Datei hochladen</strong></p><p style="margin-top:4px">oder Demo-Daten verwenden</p>`;
+  zone.style.borderColor = '#ef4444';
+  zone.style.background  = '#fef2f2';
+  setTimeout(() => {
+    zone.style.borderColor = '';
+    zone.style.background  = '';
+  }, 3000);
 }
 
 function parseStaffRow(r, i) {
@@ -3207,21 +3389,6 @@ function downloadTemplate() {
     }
   }
 
-  // Hinweise unterhalb der Tabelle
-  const hinweise = [
-    [''],
-    ['ℹ️  Pflichtfelder: Name, Qualifikation, Gruppe, Wochenstunden'],
-    ['   Qualifikation: ErzieherIn | Azubi | Hilfskraft'],
-    ['   Urlaub_Von / Urlaub_Bis: Format TT.MM.JJJJ (leer = kein Urlaub)'],
-    ['   Schulung: Wochentag z.B. Montag, Dienstag ... (leer = keine)'],
-    ['   Krank: ja | nein'],
-  ];
-  XLSX.utils.sheet_add_aoa(ws1, hinweise, { origin: { r: 14, c: 0 } });
-  for (let r = 15; r <= 20; r++) {
-    const ref = XLSX.utils.encode_cell({ r: r-1, c: 0 });
-    if (ws1[ref]) ws1[ref].s = { font: { italic: true, color: { rgb: '64748B' }, sz: 9 } };
-  }
-
   XLSX.utils.book_append_sheet(wb, ws1, 'Mitarbeiterdaten');
 
   // ── Blatt 2: Leere Vorlage ──
@@ -3229,8 +3396,6 @@ function downloadTemplate() {
     ['Name','Qualifikation','Gruppe','Wochenstunden','Urlaub_Von','Urlaub_Bis','Schulung','Krank'],
   ];
   for (let i = 0; i < 20; i++) vorlageData.push(['','','','','','','','']);
-  vorlageData.push(['']);
-  vorlageData.push(['→ Diese Vorlage ausfüllen und in KitaShift·KI importieren']);
 
   const ws2 = XLSX.utils.aoa_to_sheet(vorlageData);
   ws2['!cols'] = [22,16,10,14,14,14,16,10].map(w => ({ wch: w }));
