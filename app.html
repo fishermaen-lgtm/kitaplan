@@ -784,6 +784,9 @@
 
         <!-- Zusatz-Aktionen (nach Generierung) -->
         <div id="extraActions" style="display:none;margin-top:10px;flex-direction:column;gap:8px;">
+          <button class="btn btn-outline" style="width:100%;justify-content:center;font-size:.82rem;color:#dc2626;border-color:#fecaca;background:#fef2f2;" onclick="exportPDF()">
+            📄 PDF-Export (schreibgeschützt)
+          </button>
           <button class="btn btn-outline" style="width:100%;justify-content:center;font-size:.82rem;" onclick="showZeiterfassung()">
             🕐 Stundenkonto & Überstunden
           </button>
@@ -1515,24 +1518,38 @@ function initLocationSelector() {
 }
 
 function selectLand(land) {
+  // Populate the hidden select with one option so .value works reliably
+  const sel = document.getElementById('landSelect');
+  sel.innerHTML = `<option value="${land}" selected>${land}</option>`;
+
   // Populate region dropdown
-  const sel = document.getElementById('regionSelect');
-  sel.innerHTML = '';
+  const regSel = document.getElementById('regionSelect');
+  regSel.innerHTML = '';
   Object.entries(DACH_REGIONS[land].regions).forEach(([k,v]) => {
-    const o = document.createElement('option'); o.value=k; o.textContent=`${k} – ${v}`; sel.appendChild(o);
+    const o = document.createElement('option');
+    o.value = k;
+    o.textContent = `${k} – ${v}`;
+    regSel.appendChild(o);
   });
-  document.getElementById('landSelect').value = land;
+
   document.querySelectorAll('.land-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector(`.land-btn[data-land="${land}"]`).classList.add('active');
+  const activeBtn = document.querySelector(`.land-btn[data-land="${land}"]`);
+  if (activeBtn) activeBtn.classList.add('active');
   document.getElementById('regionRow').style.display = 'flex';
+
+  // Update region label
+  const labels = { CH: 'Kanton wählen', DE: 'Bundesland wählen', AT: 'Bundesland wählen' };
+  const lbl = document.getElementById('regionLabel');
+  if (lbl) lbl.textContent = labels[land] || 'Region wählen';
 }
 
 function confirmLocation() {
-  const land = document.getElementById('landSelect').value;
+  const land   = document.getElementById('landSelect').value;
   const region = document.getElementById('regionSelect').value;
-  if(!land||!region) return alert('Bitte Land und Region auswählen.');
-  window._location = {land, region};
-  localStorage.setItem('kitashift_location', JSON.stringify({land, region}));
+  if (!land)   return alert('Bitte zuerst ein Land auswählen (🇨🇭 🇩🇪 🇦🇹).');
+  if (!region) return alert('Bitte Kanton / Bundesland auswählen.');
+  window._location = { land, region };
+  localStorage.setItem('kitashift_location', JSON.stringify({ land, region }));
   document.getElementById('locationModal').style.display = 'none';
   updateLocationBadge();
   updateLawInfoBox(land);
@@ -2183,8 +2200,9 @@ function renderPlan(plan, params) {
         <h2 style="font-family:'Playfair Display',serif;color:var(--primary);font-size:1.4rem;">${kitaName}</h2>
         <p style="color:var(--muted);font-size:.85rem;">${plan.weeks.length}-Wochen-Plan · KI-generiert</p>
       </div>
-      <div style="display:flex;gap:8px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn btn-outline" onclick="window.print()">🖨️ Drucken</button>
+        <button class="btn btn-outline" onclick="exportPDF()" style="color:#dc2626;border-color:#fecaca;background:#fef2f2;">📄 PDF Export</button>
         <button class="btn btn-success" onclick="exportExcel()">📊 Excel Export</button>
       </div>
     </div>`;
@@ -2763,6 +2781,346 @@ function switchWeek(idx) {
 // ─────────────────────────────────────────────
 // EXCEL EXPORT
 // ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// PDF EXPORT — via Browser Print-to-PDF
+// Erstellt ein sauberes, schreibgeschütztes Drucklayout
+// ─────────────────────────────────────────────
+function exportPDF() {
+  const plan = window._planData;
+  const params = window._planParams;
+  if (!plan) return alert('Bitte zuerst einen Plan generieren.');
+
+  const kitaName  = document.getElementById('kitaName')?.value || 'Kita';
+  const law       = getLaw();
+  const loc       = window._location || {land:'CH', region:''};
+  const locLabel  = `${DACH_REGIONS[loc.land]?.label || loc.land} / ${loc.region}`;
+  const today     = new Date().toLocaleDateString('de-CH', {day:'2-digit',month:'2-digit',year:'numeric'});
+  const gruppenNames = getGruppenNames();
+  const numG      = getNumGruppen();
+
+  // Schichtfarben
+  const SHIFT_COLORS = {
+    frueh: { bg:'#fff7ed', border:'#f97316', label:'Früh' },
+    spaet: { bg:'#eff6ff', border:'#3b82f6', label:'Spät' },
+    mitte: { bg:'#f0fdf4', border:'#22c55e', label:'Mitte' },
+    rand:  { bg:'#f8fafc', border:'#94a3b8', label:'Rand' },
+    feiertag: { bg:'#f0fdf4', border:'#15803d', label:'🎉' },
+    absent: { bg:'#fef2f2', border:'#ef4444', label:'Abw.' },
+    training: { bg:'#fefce8', border:'#ca8a04', label:'📚' },
+  };
+
+  // ── Kopfzeile ──
+  let body = `
+  <div class="pdf-header">
+    <div class="pdf-logo">🏡 KitaShift·KI</div>
+    <div class="pdf-title">${kitaName}</div>
+    <div class="pdf-meta">
+      ${locLabel} &nbsp;·&nbsp; ${law.gesetz} &nbsp;·&nbsp; ${numG} Gruppen &nbsp;·&nbsp;
+      Erstellt: ${today} &nbsp;·&nbsp; <strong>Vertraulich – nicht zur Weitergabe</strong>
+    </div>
+  </div>`;
+
+  // ── Je Woche eine Seite ──
+  plan.weeks.forEach((wk, wi) => {
+    const startD = new Date(params.startDate);
+    const weekOffset = wk.weekNum - 1;
+    const weekStart = new Date(startD);
+    weekStart.setDate(startD.getDate() + weekOffset * 7);
+
+    body += `<div class="pdf-week ${wi > 0 ? 'page-break' : ''}">`;
+    body += `<div class="pdf-week-title">${wk.label} &nbsp;·&nbsp; ${weekStart.toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit'})} – ${new Date(weekStart.getTime()+4*86400000).toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit',year:'numeric'})}</div>`;
+
+    // Tag-Spalten berechnen
+    const dayMetas = DAYS.map((day, di) => {
+      const d = new Date(weekStart); d.setDate(weekStart.getDate() + di);
+      const ft = getFeiertag(d);
+      return { day, date: d, ft };
+    });
+
+    // ── Randdienste ──
+    const randSlots = [];
+    dayMetas.forEach(({day}) => {
+      ((wk.days[day]||{})['Randdienst']||[]).forEach(sl => {
+        if (!randSlots.find(r => r.name === sl.name)) randSlots.push(sl);
+      });
+    });
+
+    if (randSlots.length > 0) {
+      body += `<div class="pdf-section-title">🌅 Randdienste (06:45–07:45 &amp; 17:15–18:15)</div>`;
+      body += `<table class="pdf-table"><thead><tr>
+        <th class="col-name">Mitarbeiter</th>
+        ${dayMetas.map(({day,date,ft}) => `<th class="${ft?.typ==='gesetzlich'?'feiertag':''}">${day.substring(0,2)}<br/><small>${date.toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit'})}</small>${ft?`<br/><small class="ft-label">🎉</small>`:''}</th>`).join('')}
+        <th>Ø h/Wo</th>
+      </tr></thead><tbody>`;
+
+      randSlots.forEach((rs, ri) => {
+        const s = staffData.find(x => x.name === rs.name);
+        body += `<tr class="${ri%2===0?'row-even':''}">
+          <td class="col-name"><strong>${rs.name}</strong><br/><small>${s?.qual||''}</small></td>`;
+        dayMetas.forEach(({day,ft}) => {
+          if (ft?.typ==='gesetzlich') { body += `<td class="feiertag"><small>🎉</small></td>`; return; }
+          const sl = ((wk.days[day]||{})['Randdienst']||[]).find(x=>x.name===rs.name);
+          if (sl) {
+            body += `<td class="slot-rand"><small>${sl.zeit||'–'}</small></td>`;
+          } else {
+            body += `<td>–</td>`;
+          }
+        });
+        body += `<td><small>${s?.stunden||'–'}h</small></td></tr>`;
+      });
+      body += `</tbody></table>`;
+    }
+
+    // ── Je Gruppe eine Tabelle ──
+    for (let g = 1; g <= numG; g++) {
+      const gKey = `Gruppe ${g}`;
+      const gName = gruppenNames[g-1] || gKey;
+      const gruppeStaff = staffData.filter(s => s.gruppe === g);
+      if (gruppeStaff.length === 0) continue;
+
+      const GCOLS = ['#1e40af','#15803d','#854d0e','#9d174d','#7c3aed','#0369a1','#b45309','#be185d','#065f46','#9a3412','#1e3a5f','#4a1d96'];
+      body += `<div class="pdf-section-title" style="color:${GCOLS[g-1]};">${gName}</div>`;
+      body += `<table class="pdf-table"><thead><tr>
+        <th class="col-name">Mitarbeiter</th>
+        ${dayMetas.map(({day,date,ft}) => `<th class="${ft?.typ==='gesetzlich'?'feiertag':''}">${day.substring(0,2)}<br/><small>${date.toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit'})}</small>${ft?`<br/><small class="ft-label">🎉</small>`:''}</th>`).join('')}
+        <th>Ø h/Wo</th>
+      </tr></thead><tbody>`;
+
+      gruppeStaff.forEach((staff, si) => {
+        body += `<tr class="${si%2===0?'row-even':''}">
+          <td class="col-name"><strong>${staff.name}</strong><br/><small>${staff.qual} · ${staff.stunden}h/Wo</small></td>`;
+        dayMetas.forEach(({day, ft}) => {
+          if (ft?.typ === 'gesetzlich') { body += `<td class="feiertag"><small>🎉 ${ft.name}</small></td>`; return; }
+          const slots = (wk.days[day]?.[gKey]) || [];
+          const sl = slots.find(x => x.name === staff.name);
+          if (!sl) { body += `<td>–</td>`; return; }
+          const col = SHIFT_COLORS[sl.schicht] || SHIFT_COLORS['rand'];
+          if (sl.typ === 'absent') {
+            body += `<td class="absent"><small>${sl.grund?.includes('Krank')?'🤒 Krank':'🏖️ '+( sl.grund||'Abwesend')}</small></td>`;
+          } else if (sl.typ === 'feiertag') {
+            body += `<td class="feiertag"><small>🎉</small></td>`;
+          } else if (sl.typ === 'training') {
+            body += `<td class="training"><small>📚 Schulung</small></td>`;
+          } else {
+            const schichtLabel = sl.schicht==='frueh'?'F':sl.schicht==='spaet'?'S':sl.schicht==='mitte'?'M':'R';
+            body += `<td class="slot-${sl.schicht||'rand'}">
+              <span class="schicht-badge">${schichtLabel}</span>
+              <small>${sl.zeit||''}</small>
+              ${sl.nettoH ? `<br/><small class="netto">${sl.nettoH.toFixed(1)}h</small>` : ''}
+            </td>`;
+          }
+        });
+        body += `<td><small>${staff.stunden}h</small></td></tr>`;
+      });
+      body += `</tbody></table>`;
+    }
+
+    // ── Meeting-Zeile ──
+    const meetings = [];
+    dayMetas.forEach(({day}) => {
+      ((wk.days[day]||{})['Meetings']||[]).forEach(m => meetings.push({day, ...m}));
+    });
+    if (meetings.length > 0) {
+      body += `<div class="pdf-section-title">📋 Team-Meetings</div>`;
+      body += `<div class="pdf-meetings">`;
+      meetings.forEach(m => {
+        body += `<div class="pdf-meeting-item">${m.day} ${m.zeit||''} — ${m.info||'Team-Meeting'}</div>`;
+      });
+      body += `</div>`;
+    }
+
+    // ── Warnungen ──
+    if (plan.warnings && plan.warnings.length > 0) {
+      body += `<div class="pdf-warnings">`;
+      body += `<strong>⚠️ Hinweise:</strong><br/>`;
+      plan.warnings.forEach(w => { body += `<div class="pdf-warn-item">${w}</div>`; });
+      body += `</div>`;
+    }
+
+    body += `</div>`; // pdf-week
+  });
+
+  // ── Fusszeile ──
+  body += `<div class="pdf-footer">
+    KitaShift·KI · ${kitaName} · ${locLabel} · ${law.gesetz} · Erstellt am ${today}
+    <br/>Dieses Dokument ist vertraulich und wurde automatisch generiert. Änderungen sind nicht erlaubt.
+  </div>`;
+
+  // ── Vollständiges HTML für Druck-Tab ──
+  const fullHTML = `<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<title>Dienstplan – ${kitaName}</title>
+<style>
+  @media print {
+    @page { size: A4 landscape; margin: 12mm 10mm; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .no-print { display: none !important; }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, 'Segoe UI', Arial, sans-serif;
+    font-size: 9pt;
+    color: #1e293b;
+    background: white;
+    padding: 8mm;
+  }
+  .pdf-header {
+    border-bottom: 2px solid #1a3a5c;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+  }
+  .pdf-logo { font-size: 10pt; color: #64748b; margin-bottom: 2px; }
+  .pdf-title {
+    font-size: 16pt;
+    font-weight: 700;
+    color: #1a3a5c;
+    margin-bottom: 3px;
+  }
+  .pdf-meta { font-size: 7.5pt; color: #64748b; }
+  .pdf-week { margin-bottom: 16px; }
+  .page-break { page-break-before: always; padding-top: 4mm; }
+  .pdf-week-title {
+    font-size: 11pt;
+    font-weight: 700;
+    color: #1a3a5c;
+    background: #e8f4fd;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    border-left: 3px solid #1a3a5c;
+  }
+  .pdf-section-title {
+    font-size: 8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: #1a3a5c;
+    margin: 8px 0 4px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .pdf-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 6px;
+    font-size: 7.5pt;
+  }
+  .pdf-table th {
+    background: #1a3a5c;
+    color: white;
+    padding: 3px 4px;
+    text-align: center;
+    font-size: 7pt;
+    font-weight: 600;
+    border: 1px solid #0f2944;
+  }
+  .pdf-table th.feiertag { background: #15803d; }
+  .pdf-table td {
+    padding: 3px 4px;
+    border: 1px solid #e2e8f0;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 1.3;
+  }
+  .col-name { text-align: left !important; min-width: 80px; max-width: 110px; }
+  .row-even td { background: #f8fafc; }
+  .ft-label { color: #15803d; font-size: 6.5pt; }
+
+  /* Schichtfarben */
+  td.slot-frueh { background: #fff7ed; border-left: 2px solid #f97316; }
+  td.slot-spaet { background: #eff6ff; border-left: 2px solid #3b82f6; }
+  td.slot-mitte { background: #f0fdf4; border-left: 2px solid #22c55e; }
+  td.slot-rand  { background: #f8fafc; border-left: 2px solid #94a3b8; }
+  td.feiertag   { background: #f0fdf4; color: #15803d; border-left: 2px solid #15803d; }
+  td.absent     { background: #fef2f2; color: #dc2626; border-left: 2px solid #ef4444; }
+  td.training   { background: #fefce8; color: #92400e; border-left: 2px solid #f59e0b; }
+
+  .schicht-badge {
+    display: inline-block;
+    font-size: 6.5pt;
+    font-weight: 700;
+    background: rgba(0,0,0,.08);
+    padding: 0 3px;
+    border-radius: 2px;
+    margin-right: 2px;
+  }
+  .netto { color: #64748b; font-size: 6pt; }
+
+  .pdf-meetings {
+    background: #f0f4f8;
+    border-radius: 4px;
+    padding: 5px 8px;
+    margin-bottom: 6px;
+    font-size: 7.5pt;
+  }
+  .pdf-meeting-item { padding: 1px 0; }
+  .pdf-warnings {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-size: 7pt;
+    color: #92400e;
+    margin-top: 6px;
+  }
+  .pdf-warn-item { padding: 1px 0; }
+  .pdf-footer {
+    margin-top: 12px;
+    padding-top: 6px;
+    border-top: 1px solid #e2e8f0;
+    font-size: 6.5pt;
+    color: #94a3b8;
+    text-align: center;
+  }
+
+  /* Print-Button (nur am Bildschirm sichtbar) */
+  .print-bar {
+    position: fixed; top: 0; left: 0; right: 0;
+    background: #1a3a5c; color: white;
+    padding: 10px 20px;
+    display: flex; align-items: center; gap: 12px;
+    z-index: 999; font-size: 9pt;
+  }
+  .print-bar button {
+    background: #f59e0b; color: #1a1a1a; border: none;
+    padding: 6px 18px; border-radius: 6px; cursor: pointer;
+    font-size: 9pt; font-weight: 700;
+  }
+  .print-bar button.close-btn {
+    background: rgba(255,255,255,.15); color: white; margin-left: auto;
+  }
+  body { padding-top: 48px; }
+  @media print { .print-bar { display: none; } body { padding-top: 0; } }
+</style>
+</head>
+<body>
+<div class="print-bar no-print">
+  <span>📄 <strong>KitaShift·KI PDF-Export</strong> — ${kitaName}</span>
+  <button onclick="window.print()">🖨️ Als PDF speichern</button>
+  <button onclick="window.print()">💾 PDF drucken</button>
+  <button class="close-btn" onclick="window.close()">✕ Schliessen</button>
+</div>
+${body}
+</body>
+</html>`;
+
+  // Im neuen Tab öffnen
+  const win = window.open('', '_blank');
+  if (!win) {
+    alert('Bitte Popup-Blocker für diese Seite deaktivieren, dann erneut versuchen.');
+    return;
+  }
+  win.document.write(fullHTML);
+  win.document.close();
+
+  // Auto-Print nach kurzem Delay
+  setTimeout(() => {
+    try { win.print(); } catch(e) {}
+  }, 800);
+}
+
 function exportExcel() {
   const plan = window._planData;
   if (!plan) return;
