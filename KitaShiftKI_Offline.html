@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>KitaShift·KI v1.0 – KI-Dienstplaner CH/DE/AT</title>
-<meta name="description" content="KI-gestützter Dienstplaner für Kitas in CH, DE & AT. 1–12 Gruppen, alle 26 Kantone, 16 Bundesländer, 9 AT-Bundesländer. CH ArG, DE ArbZG, AT AZG konform."/>
+<title>KitaShift·KI v1.0 – Offline-Dienstplaner CH/DE/AT</title>
+<meta name="description" content="KI-gestützter Offline-Dienstplaner für Kitas in CH, DE & AT. 1–12 Gruppen, alle 26 Kantone, 16 Bundesländer. CH ArG, DE ArbZG, AT AZG konform. Keine Internetverbindung nötig."/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
   onerror="document.getElementById('xlsxWarn')&&(document.getElementById('xlsxWarn').style.display='block')">
 </script>
@@ -18,7 +18,7 @@ setTimeout(() => {
 }, 3000);
 </script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap');
+  /* Systemschriften — kein Internet nötig */
 
   :root {
     --primary: #1a3a5c;
@@ -45,7 +45,7 @@ setTimeout(() => {
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    font-family: 'DM Sans', sans-serif;
+    font-family: -apple-system, 'Segoe UI', Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
@@ -63,7 +63,7 @@ setTimeout(() => {
     position: sticky; top: 0; z-index: 100;
   }
   .logo-icon { font-size: 2rem; }
-  header h1 { font-family: 'Playfair Display', serif; font-size: 1.5rem; }
+  header h1 { font-family: Georgia, 'Times New Roman', serif; font-size: 1.5rem; }
   header span { font-size:.8rem; opacity:.7; margin-left: 4px; }
   .header-badge {
     margin-left: auto;
@@ -261,7 +261,7 @@ setTimeout(() => {
     gap: 12px;
   }
   .week-title {
-    font-family: 'Playfair Display', serif;
+    font-family: Georgia, 'Times New Roman', serif;
     font-size: 1.3rem;
     color: var(--primary);
   }
@@ -432,7 +432,7 @@ setTimeout(() => {
     animation: fadeUp .4s ease both;
   }
   .loc-flag { font-size: 2.5rem; margin-bottom: 16px; }
-  .loc-h2 { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+  .loc-h2 { font-family: Georgia, 'Times New Roman', serif; font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
   .loc-sub { font-size: .88rem; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
   .land-btns { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 20px; }
   .land-btn {
@@ -473,18 +473,15 @@ setTimeout(() => {
 <header>
   <span class="logo-icon">🏡</span>
   <div>
-    <h1>KitaShift<span style="color:var(--gold,#f59e0b)">·KI</span> <span style="font-size:.65rem;opacity:.6;font-family:sans-serif;font-weight:400;margin-left:4px;">v1.0</span></h1>
-    <div style="font-size:.72rem;opacity:.65;margin-top:1px;">KI-Dienstplaner · CH/DE/AT · Feiertage automatisch</div>
+    <h1>KitaShift<span style="color:var(--gold,#f59e0b)">·KI</span> <span style="font-size:.65rem;opacity:.6;font-family:sans-serif;font-weight:400;margin-left:4px;">v1.0 Offline</span></h1>
+    <div style="font-size:.72rem;opacity:.65;margin-top:1px;">Offline-Dienstplaner · CH/DE/AT · Feiertage automatisch · Keine Internetverbindung nötig</div>
   </div>
   <div style="margin-left:auto;display:flex;gap:10px;align-items:center;">
-    <button class="loc-badge" onclick="downloadApp()" title="App als HTML-Datei herunterladen"
-      style="background:rgba(245,158,11,.2);border-color:rgba(245,158,11,.4);">
-      ⬇️ App herunterladen
-    </button>
+
     <button class="loc-badge" onclick="changeLocation()" title="Standort ändern">
       📍 <span id="locationBadge">Standort wählen</span>
     </button>
-    <div class="header-badge">✦ KI-gestützt</div>
+    <div class="header-badge">✦ Offline-Version</div>
   </div>
 </header>
 
@@ -849,7 +846,7 @@ setTimeout(() => {
       <div class="card" id="outputCard">
         <div id="emptyState" style="text-align:center;padding:60px 20px;color:var(--muted);">
           <div style="font-size:4rem;margin-bottom:16px;">📅</div>
-          <h3 style="font-family:'Playfair Display',serif;color:var(--primary);margin-bottom:8px;">Bereit zur Planung</h3>
+          <h3 style="font-family:Georgia,'Times New Roman',serif;color:var(--primary);margin-bottom:8px;">Bereit zur Planung</h3>
           <p>Lade eine Excel-Datei oder klicke auf <strong>"Demo-Daten laden"</strong>,<br/>stelle die Parameter ein und generiere deinen KI-Wochenplan.</p>
         </div>
         <div id="loadingState" style="display:none;">
@@ -1370,6 +1367,7 @@ async function generatePlan() {
     alert('Bitte zuerst einen Standort auswählen (📍 Button oben).');
     return;
   }
+  // OFFLINE-VERSION: kein API-Call, direkt lokaler Generator
 
   document.getElementById('emptyState').style.display = 'none';
   document.getElementById('loadingState').style.display = '';
@@ -1401,7 +1399,7 @@ async function generatePlan() {
     gruppenNames: getGruppenNames(),
   };
 
-  // ── Immer zuerst lokal generieren (Fallback bereit) ──
+  // ── Offline: nur lokale Generierung ──
   let localPlan;
   try {
     localPlan = generateLocalPlan(params);
@@ -1410,9 +1408,8 @@ async function generatePlan() {
     localPlan = null;
   }
 
-  // ── KI-Versuch (schlägt bei file:// oder CORS fehl → Fallback) ──
-  const isOnline = location.protocol === 'https:' || location.protocol === 'http:';
-  if (isOnline) {
+  // Offline-Version: KI-API wird nicht verwendet
+  if (false) { // deaktiviert
     try {
       let prompt;
       try { prompt = buildPrompt(params); }
@@ -2541,7 +2538,7 @@ function renderPlan(plan, params) {
   let html = `
     <div style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
       <div>
-        <h2 style="font-family:'Playfair Display',serif;color:var(--primary);font-size:1.4rem;">${kitaName}</h2>
+        <h2 style="font-family:Georgia,'Times New Roman',serif;color:var(--primary);font-size:1.4rem;">${kitaName}</h2>
         <p style="color:var(--muted);font-size:.85rem;">${plan.weeks.length}-Wochen-Plan · KI-generiert</p>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -2638,7 +2635,7 @@ function renderPlan(plan, params) {
 function showZeiterfassung() {
   const plan = window._planData;
   if (!plan) return alert('Bitte zuerst einen Plan generieren.');
-  let html = `<h3 style="font-family:'Playfair Display',serif;color:var(--primary);margin-bottom:16px;">🕐 Stundenkonto – alle Mitarbeiter</h3>`;
+  let html = `<h3 style="font-family:Georgia,'Times New Roman',serif;color:var(--primary);margin-bottom:16px;">🕐 Stundenkonto – alle Mitarbeiter</h3>`;
 
   plan.weeks.forEach((wk, wi) => {
     html += `<div style="margin-bottom:20px;"><strong style="font-size:.85rem;color:var(--primary);">${wk.label}</strong>
@@ -2695,7 +2692,7 @@ function showMonatsübersicht() {
   const plan = window._planData;
   if (!plan) return alert('Bitte zuerst einen Plan generieren.');
 
-  let html = `<h3 style="font-family:'Playfair Display',serif;color:var(--primary);margin-bottom:16px;">📅 Monatsübersicht – alle Mitarbeiter</h3>`;
+  let html = `<h3 style="font-family:Georgia,'Times New Roman',serif;color:var(--primary);margin-bottom:16px;">📅 Monatsübersicht – alle Mitarbeiter</h3>`;
   html += `<table style="width:100%;border-collapse:collapse;font-size:.8rem;">
     <thead><tr style="background:var(--primary);color:white;">
       <th style="padding:7px 10px;text-align:left;">Mitarbeiter</th>
@@ -2792,7 +2789,7 @@ function showPersonalschluessel() {
   const verfuegbar = staffData.filter(s => s.qual === 'ErzieherIn' && !s.krank).length;
   const ok = verfuegbar >= minFKGesamt;
 
-  let html = `<h3 style="font-family:'Playfair Display',serif;color:var(--primary);margin-bottom:16px;">👶 Personalschlüssel-Prüfung</h3>`;
+  let html = `<h3 style="font-family:Georgia,'Times New Roman',serif;color:var(--primary);margin-bottom:16px;">👶 Personalschlüssel-Prüfung</h3>`;
   html += `<div style="background:${ok?'#f0fdf4':'#fef2f2'};border:1px solid ${ok?'#bbf7d0':'#fecaca'};border-radius:10px;padding:14px 16px;margin-bottom:14px;">
     <div style="font-weight:700;color:${ok?'#15803d':'#dc2626'};margin-bottom:8px;">${ok ? '✅ Personalschlüssel eingehalten' : '⚠️ Personalschlüssel nicht erfüllt!'}</div>
     <table style="width:100%;font-size:.84rem;border-collapse:collapse;">
@@ -2910,7 +2907,7 @@ function generateNotfallplan() {
   const law = getLaw();
   const maxH = parseFloat(document.getElementById('az_maxNetH')?.value) || law.maxTagNetto;
 
-  let html = `<h3 style="font-family:'Playfair Display',serif;color:var(--primary);margin-bottom:4px;">🚨 Notfallplan</h3>
+  let html = `<h3 style="font-family:Georgia,'Times New Roman',serif;color:var(--primary);margin-bottom:4px;">🚨 Notfallplan</h3>
   <p style="color:var(--muted);font-size:.84rem;margin-bottom:16px;">Schnellübersicht bei Personalausfall — wer kann einspringen?</p>`;
 
   if (krank.length === 0) {
@@ -2962,7 +2959,7 @@ function loadTemplate() {
     return alert('Keine gespeicherten Vorlagen gefunden.\nGeneriere einen Plan und klicke "Als Vorlage speichern".');
   }
 
-  let html = `<h3 style="font-family:'Playfair Display',serif;color:var(--primary);margin-bottom:16px;">📂 Gespeicherte Vorlagen</h3>`;
+  let html = `<h3 style="font-family:Georgia,'Times New Roman',serif;color:var(--primary);margin-bottom:16px;">📂 Gespeicherte Vorlagen</h3>`;
   html += `<div style="display:flex;flex-direction:column;gap:10px;">`;
   templates.forEach((t, i) => {
     const date = new Date(t.savedAt).toLocaleDateString('de-CH');
