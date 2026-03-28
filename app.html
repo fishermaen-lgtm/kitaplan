@@ -828,8 +828,9 @@ setTimeout(() => {
           <label>Meeting-Tag & Uhrzeit</label>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
             <select id="meetingDay">
+              <option value="" selected>— Kein Meeting —</option>
               <option value="Montag">Montag</option>
-              <option value="Dienstag" selected>Dienstag</option>
+              <option value="Dienstag">Dienstag</option>
               <option value="Mittwoch">Mittwoch</option>
               <option value="Donnerstag">Donnerstag</option>
               <option value="Freitag">Freitag</option>
@@ -1660,7 +1661,7 @@ PARAMETER:
 - KERNZEIT: 07:45–17:15 – Früh / Mitte / Spät
 - Wochenstunden-Soll: ${law.wochenSoll}h / 5 Tage = ${(law.wochenSoll/5).toFixed(1)}h Soll netto pro Tag
 - ${p.numGruppen} Kita-Gruppen (Gruppe 1–${p.numGruppen}): ${p.gruppenNames.join(', ')}
-- Team-Meeting: jeden ${p.meetingDay} ab ${p.meetingTime} Uhr
+- ${p.meetingDay ? `Team-Meeting: jeden ${p.meetingDay} ab ${p.meetingTime} Uhr` : 'Kein Team-Meeting in dieser Planungswoche'}
 - Mind. ${p.minFach} ErzieherIn pro Gruppe in Kernzeit
 - Wochen: ${JSON.stringify(weekLabels)}
 
@@ -2366,6 +2367,9 @@ function buildShiftsFromFields() {
     kernMitte: makeShift(az.kernMitte_start, az.kernMitte_end, 'mitte', `${az.kernMitte_start}–${az.kernMitte_end}`),
     kernSpaet: makeShift(az.kernSpaet_start, az.kernSpaet_end, 'spaet', `${az.kernSpaet_start}–${az.kernSpaet_end}`),
     randSpaet: makeShift(az.randSpaet_start, az.randSpaet_end, 'rand',  `${az.randSpaet_start}–${az.randSpaet_end}`),
+    // Spezialschichten für Randdienst-Personal (nahtloser Anschluss)
+    kernNachFruehrand: makeShift(az.randFrueh_end, az.kernSpaet_end, 'frueh', `${az.randFrueh_end}–${az.kernSpaet_end}`),
+    kernVorSpaetrand:  makeShift(az.kernMitte_start, az.randSpaet_start, 'spaet', `${az.kernMitte_start}–${az.randSpaet_start}`),
   };
 }
 
@@ -2604,7 +2608,7 @@ function generateLocalPlan(params) {
 
     DAYS.forEach((day, di) => {
       const dayDate = new Date(weekStart); dayDate.setDate(weekStart.getDate() + di);
-      const isMeetingDay = day === params.meetingDay;
+      const isMeetingDay = params.meetingDay && day === params.meetingDay;
       const feiertag = getFeiertag(dayDate);
       days[day] = {};
       days[day]['_meta'] = { feiertag };
@@ -2658,8 +2662,9 @@ function generateLocalPlan(params) {
         const prevDay = dailyNetH[staff.name] || 0;
         const prevWeek = weeklyH[staff.name] || 0;
 
-        // Check 1: Max netto/Tag (mit 0.5h Toleranz für Randdienst-Kombination)
-        const tolerance = isRand ? 0.0 : 0.5;
+        // Check 1: Max netto/Tag (mit 0.5h Toleranz wenn MA bereits Randstunden hat)
+        const hasRandToday = prevDay > 0;
+        const tolerance = hasRandToday ? 0.5 : 0.05;
         if (prevDay + net > maxNetH + tolerance) {
           warnings.push(`⚠️ ${day} / ${staff.name}: Tageslimit ${maxNetH}h (${law.gesetz}) – ${(prevDay+net).toFixed(1)}h geplant → Dienst angepasst`);
           return null;
@@ -2723,16 +2728,13 @@ function generateLocalPlan(params) {
           if (isMeetingDay) {
             shiftKey = 'kernFrueh';
           } else if (isRandFrueh) {
-            // Früh-Rand 06:45–07:45 (1h): Direkt weiter in Mitteldienst 08:30–17:15
-            // Kleine Übergangspause 07:45–08:30 (45min) für Gruppenübergabe
-            // Gesamt netto: 1h + 8.25h = 9.25h (CH max 9h → wird von assignShift geprüft)
-            // Alternativ Frühschicht: 1h + 8.5h = 9.5h → zu viel für CH
-            // → Mitteldienst ist der beste Kompromiss
-            shiftKey = 'kernMitte';
+            // Früh-Rand endet 07:45 → Direkt weiter ab 07:45 (kernNachFruehrand)
+            // Nahtloser Übergang, KEIN Leerlauf
+            shiftKey = 'kernNachFruehrand';
           } else if (isRandSpaet) {
-            // Spät-Rand 17:15–18:15 (1h): Vorher Mitteldienst 08:30–17:15
-            // Nahtloser Übergang, Gesamt netto: 8.25h + 1h = 9.25h
-            shiftKey = 'kernMitte';
+            // Spät-Rand beginnt 17:15 → Vorher kernVorSpaetrand (08:30–17:15)
+            // Nahtloser Übergang in Spätrand
+            shiftKey = 'kernVorSpaetrand';
           } else {
             // Normaler Dienst: alternieren
             if (s.qual === 'ErzieherIn') shiftKey = si % 2 === 0 ? 'kernFrueh' : 'kernSpaet';
@@ -2744,11 +2746,20 @@ function generateLocalPlan(params) {
           if (sl) {
             groupSlots.push(sl);
           } else {
-            // Fallback: kürzerer Dienst
-            const altKey = shiftKey === 'kernFrueh' ? 'kernSpaet' : 'kernFrueh';
-            const sl2 = assignShift(s, altKey);
-            if (sl2) groupSlots.push(sl2);
-            else groupSlots.push({ name:s.name, zeit:'–', typ:'absent', schicht:'absent', grund:'⏱️ Stundenlimit ArG' });
+            // Fallback-Kette
+            let fallbacks;
+            if (isRandFrueh) fallbacks = ['kernFrueh', 'kernMitte'];
+            else if (isRandSpaet) fallbacks = ['kernSpaet', 'kernMitte'];
+            else fallbacks = [shiftKey === 'kernFrueh' ? 'kernSpaet' : 'kernFrueh'];
+
+            let placed = false;
+            for (const altKey of fallbacks) {
+              const sl2 = assignShift(s, altKey);
+              if (sl2) { groupSlots.push(sl2); placed = true; break; }
+            }
+            if (!placed) {
+              groupSlots.push({ name:s.name, zeit:'–', typ:'absent', schicht:'absent', grund:'⏱️ Stundenlimit ArG' });
+            }
           }
         });
 
