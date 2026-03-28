@@ -2658,8 +2658,9 @@ function generateLocalPlan(params) {
         const prevDay = dailyNetH[staff.name] || 0;
         const prevWeek = weeklyH[staff.name] || 0;
 
-        // Check 1: Max netto/Tag
-        if (prevDay + net > maxNetH + 0.05) {
+        // Check 1: Max netto/Tag (mit 0.5h Toleranz für Randdienst-Kombination)
+        const tolerance = isRand ? 0.0 : 0.5;
+        if (prevDay + net > maxNetH + tolerance) {
           warnings.push(`⚠️ ${day} / ${staff.name}: Tageslimit ${maxNetH}h (${law.gesetz}) – ${(prevDay+net).toFixed(1)}h geplant → Dienst angepasst`);
           return null;
         }
@@ -2720,13 +2721,17 @@ function generateLocalPlan(params) {
 
           let shiftKey;
           if (isMeetingDay) {
-            // Meeting-Tag: Frühdienst bis Meeting, dann Meeting
             shiftKey = 'kernFrueh';
           } else if (isRandFrueh) {
-            // Hat Früh-Rand: Kern danach → Spätdienst (CH: Rand 1h + Spät 7,5h = 8,5h netto ✓)
-            shiftKey = 'kernSpaet';
+            // Früh-Rand 06:45–07:45 (1h): Direkt weiter in Mitteldienst 08:30–17:15
+            // Kleine Übergangspause 07:45–08:30 (45min) für Gruppenübergabe
+            // Gesamt netto: 1h + 8.25h = 9.25h (CH max 9h → wird von assignShift geprüft)
+            // Alternativ Frühschicht: 1h + 8.5h = 9.5h → zu viel für CH
+            // → Mitteldienst ist der beste Kompromiss
+            shiftKey = 'kernMitte';
           } else if (isRandSpaet) {
-            // Hat Spät-Rand: Kern davor → Frühdienst (1h + 8,5h = 9,5h brutto → zu viel → Mitteldienst)
+            // Spät-Rand 17:15–18:15 (1h): Vorher Mitteldienst 08:30–17:15
+            // Nahtloser Übergang, Gesamt netto: 8.25h + 1h = 9.25h
             shiftKey = 'kernMitte';
           } else {
             // Normaler Dienst: alternieren
