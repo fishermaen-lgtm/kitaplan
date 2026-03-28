@@ -722,7 +722,7 @@ footer strong{color:white;}
   <div class="footer-links">
     <a href="legal.html">Datenschutz</a>
     <a href="legal.html">Impressum</a>
-    <a href="mailto:info@save-house.de">info@save-house.de</a>
+    <a href="/cdn-cgi/l/email-protection#e68f888089a695879083cb8e89939583c88283"><span class="__cf_email__" data-cfemail="cfa6a1a9a08fbcaeb9aae2a7a0babcaae1abaa">[email&#160;protected]</span></a>
     <a href="app.html" download="KitaShiftKI.html">⬇️ App herunterladen</a>
     <a href="app.html" target="_blank">App starten</a>
   </div>
@@ -771,20 +771,20 @@ footer strong{color:white;}
         <span class="pay-icon">🏦</span>
         <span class="pay-label">
           <span class="pay-name" style="color:#065f46;">Banküberweisung</span>
-          <span class="pay-desc">VR Bank · IBAN anzeigen</span>
+          <span class="pay-desc">Deutsche Skatbank · IBAN anzeigen</span>
         </span>
         <span style="margin-left:auto;font-size:.78rem;color:#065f46;font-weight:700;" id="bank-toggle-icon">▼</span>
       </button>
 
       <!-- BANK DETAILS (ausgeklappt) -->
       <div class="bank-details" id="bankDetails">
-        <div style="font-size:.78rem;font-weight:700;color:#065f46;margin-bottom:10px;">🏦 VR Bank Überweisungsdaten</div>
+        <div style="font-size:.78rem;font-weight:700;color:#065f46;margin-bottom:10px;">🏦 Überweisungsdaten — Deutsche Skatbank</div>
 
         <div class="bank-row">
           <span class="bank-key">Empfänger</span>
           <span style="display:flex;align-items:center;gap:4px;">
             <!-- ✏️ HIER DEINEN NAMEN EINTRAGEN -->
-            <span class="bank-val" id="bank-name">DEIN NAME / FIRMA</span>
+            <span class="bank-val" id="bank-name">BDS Bieler Distribution Service</span>
             <button class="copy-btn" onclick="copyText('bank-name')">Kopieren</button>
           </span>
         </div>
@@ -793,7 +793,7 @@ footer strong{color:white;}
           <span class="bank-key">IBAN</span>
           <span style="display:flex;align-items:center;gap:4px;">
             <!-- ✏️ HIER DEINE IBAN EINTRAGEN -->
-            <span class="bank-val" id="bank-iban">DE__ ____ ____ ____ ____ __</span>
+            <span class="bank-val" id="bank-iban">DE76 8306 5408 0104 5987 25</span>
             <button class="copy-btn" onclick="copyText('bank-iban')">Kopieren</button>
           </span>
         </div>
@@ -802,14 +802,14 @@ footer strong{color:white;}
           <span class="bank-key">BIC</span>
           <span style="display:flex;align-items:center;gap:4px;">
             <!-- ✏️ HIER DEN BIC EINTRAGEN (steht auf deiner Bankkarte) -->
-            <span class="bank-val" id="bank-bic">VRXXXXXXXX</span>
+            <span class="bank-val" id="bank-bic">GENODEF1SLR</span>
             <button class="copy-btn" onclick="copyText('bank-bic')">Kopieren</button>
           </span>
         </div>
 
         <div class="bank-row">
           <span class="bank-key">Bank</span>
-          <span class="bank-val">VR Bank</span>
+          <span class="bank-val">Deutsche Skatbank (VR-Bank Altenburger Land eG)</span>
         </div>
 
         <div class="bank-row">
@@ -848,24 +848,25 @@ footer strong{color:white;}
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ─────────────────────────────────────────────
 // ZAHLUNGSKONFIGURATION
 // ✏️ Hier deine Links eintragen sobald du sie hast
 // ─────────────────────────────────────────────
 const PAYMENT_CONFIG = {
-  // PayPal Links (von paypal.com/ncp/payment/...)
+  // PayPal.me Links — Alias "fishermaen" bei paypal.com/paypalme einrichten!
+  // PayPal-E-Mail: fishermaen@web.de
   // 🇨🇭 CHF Preise
-  'free':            { paypal: 'PAYPAL_LINK_FREE',               klarna: 'KLARNA_LINK_FREE'              },
-  'pro-monthly':     { paypal: 'PAYPAL_LINK_PRO_CHF18_MO',       klarna: 'KLARNA_LINK_PRO_CHF18_MO'     },  // CHF 18
-  'pro-yearly':      { paypal: 'PAYPAL_LINK_PRO_CHF154_JAHR',    klarna: 'KLARNA_LINK_PRO_CHF154_JAHR'  },  // CHF 154
-  'traeger':         { paypal: 'PAYPAL_LINK_TRAEGER_CHF48',       klarna: 'KLARNA_LINK_TRAEGER_CHF48'    },  // CHF 48
-  'solo-once':       { paypal: 'PAYPAL_LINK_SOLO_CHF79',         klarna: 'KLARNA_LINK_SOLO_CHF79'       },  // CHF 79
-  'pro-once':        { paypal: 'PAYPAL_LINK_PRO_CHF149',         klarna: 'KLARNA_LINK_PRO_CHF149'       },  // CHF 149
+  'free':            { paypal: '',                                                klarna: '' },
+  'pro-monthly':     { paypal: 'https://www.paypal.me/fishermaen/18CHF',          klarna: '' },  // CHF 18
+  'pro-yearly':      { paypal: 'https://www.paypal.me/fishermaen/154CHF',         klarna: '' },  // CHF 154
+  'traeger':         { paypal: 'https://www.paypal.me/fishermaen/48CHF',          klarna: '' },  // CHF 48
+  'solo-once':       { paypal: 'https://www.paypal.me/fishermaen/79CHF',          klarna: '' },  // CHF 79
+  'pro-once':        { paypal: 'https://www.paypal.me/fishermaen/149CHF',         klarna: '' },  // CHF 149
   // 🇩🇪🇦🇹 EUR Preise
-  'pro-monthly-eur': { paypal: 'PAYPAL_LINK_PRO_EUR20_MO',       klarna: 'KLARNA_LINK_PRO_EUR20_MO'     },  // € 20
-  'pro-yearly-eur':  { paypal: 'PAYPAL_LINK_PRO_EUR162_JAHR',    klarna: 'KLARNA_LINK_PRO_EUR162_JAHR'  },  // € 162
-  'traeger-eur':     { paypal: 'PAYPAL_LINK_TRAEGER_EUR50',       klarna: 'KLARNA_LINK_TRAEGER_EUR50'    },  // € 50
+  'pro-monthly-eur': { paypal: 'https://www.paypal.me/fishermaen/20EUR',          klarna: '' },  // € 20
+  'pro-yearly-eur':  { paypal: 'https://www.paypal.me/fishermaen/162EUR',         klarna: '' },  // € 162
+  'traeger-eur':     { paypal: 'https://www.paypal.me/fishermaen/50EUR',          klarna: '' },  // € 50
 };
 
 function openPayment(productName, productPrice, productKey) {
@@ -882,7 +883,7 @@ function openPayment(productName, productPrice, productKey) {
     ppBtn.style.opacity = '1';
   } else {
     ppBtn.href = '#';
-    ppBtn.onclick = (e) => { e.preventDefault(); alert('PayPal-Link noch nicht eingetragen.\nÖffne index.html auf GitHub und ersetze PAYPAL_LINK_' + productKey.toUpperCase()); };
+    ppBtn.onclick = (e) => { e.preventDefault(); alert('PayPal ist für dieses Produkt noch nicht verfügbar.\nBitte nutzen Sie Banküberweisung.'); };
   }
 
   // Klarna link
@@ -892,13 +893,11 @@ function openPayment(productName, productPrice, productKey) {
     klBtn.style.opacity = '1';
   } else {
     klBtn.href = '#';
-    klBtn.onclick = (e) => { e.preventDefault(); alert('Klarna-Link noch nicht eingetragen.\nDu kannst Klarna einfach über deinen PayPal-Account aktivieren.'); };
+    klBtn.onclick = (e) => { e.preventDefault(); alert('Klarna ist aktuell nicht verfügbar.\nBitte nutzen Sie PayPal oder Banküberweisung.'); };
   }
 
-  // Show developer hint if placeholder links
-  const hasPlaceholders =
-    document.getElementById('bank-iban').textContent.includes('DE__') ||
-    (cfg.paypal && cfg.paypal.startsWith('PAYPAL_LINK'));
+  // Show developer hint only if placeholder links still exist
+  const hasPlaceholders = false; // Alle Zahlungsdaten eingetragen
   document.getElementById('placeholder-hint').style.display = hasPlaceholders ? 'block' : 'none';
 
   // Show modal
@@ -928,9 +927,4 @@ function toggleBank() {
 
 function copyText(id) {
   const el = document.getElementById(id);
-  navigator.clipboard.writeText(el.textContent).then(() => {
-    const btn = el.parentElement.querySelector('.copy-btn');
-    const orig = btn.textContent;
-    btn.textContent = '✓';
-    btn.style.background = '#10b981';
-    setTimeout(() => { btn.textContent = or
+  navigator.clipboard.wri

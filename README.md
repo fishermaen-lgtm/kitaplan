@@ -10,8 +10,14 @@
 
 | Datei | Beschreibung |
 |---|---|
-| `index.html` | Landingpage / Verkaufsseite mit Zahlungsmodal |
 | `app.html` | KitaShift·KI App (vollständig, offline-fähig) |
+| `KitaShiftKI_Offline.html` | Offline-Version (ohne API-Call) |
+| `index.html` | Landingpage / Verkaufsseite mit Zahlungsmodal |
+| `download.html` | Download-Seite für .store/.shop Domains |
+| `legal.html` | Impressum + Datenschutz DE/CH/AT |
+| `ANLEITUNG.html` | GitHub-Deployment-Anleitung |
+| `PRODUKTUEBERSICHT.html` | Interne Produktübersicht |
+| `COPYRIGHT.txt` | Urheberrechtshinweis |
 | `CNAME` | Domain-Verknüpfung (kitaplan.save-house.de) |
 | `README.md` | Diese Datei |
 
@@ -47,7 +53,7 @@
 - ✅ Bewegliche Feiertage (Ostern, Pfingsten, Fronleichnam) algorithmisch berechnet
 
 ### Zahlung & Vertrieb
-- ✅ PayPal, Klarna, VR Bank Überweisung
+- ✅ PayPal (fishermaen@web.de), Banküberweisung (Deutsche Skatbank)
 - ✅ Reseller-Programm: 40% recurring Provision
 - ✅ White-Label für Träger
 
