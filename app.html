@@ -18,6 +18,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>KitaShift·KI v1.0 – KI-Dienstplaner CH/DE/AT</title>
 <meta name="description" content="KI-gestützter Dienstplaner für Kitas in CH, DE & AT. 1–12 Gruppen, alle 26 Kantone, 16 Bundesländer, 9 AT-Bundesländer. CH ArG, DE ArbZG, AT AZG konform."/>
+<!-- PWA -->
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#1a3a5c"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="KitaShift·KI"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
   onerror="document.getElementById('xlsxWarn')&&(document.getElementById('xlsxWarn').style.display='block')">
 </script>
@@ -480,6 +489,17 @@ setTimeout(() => {
   }
   .loc-badge:hover { background: rgba(255,255,255,.25); }
 
+  /* ── PWA Install Button ── */
+  .pwa-install-btn {
+    display: none;
+    background: rgba(245,158,11,.2); border: 1px solid rgba(245,158,11,.4);
+    color: white; padding: 4px 12px; border-radius: 20px; font-size: .75rem;
+    font-weight: 600; cursor: pointer; transition: all .15s;
+    animation: fadeUp .5s ease both;
+  }
+  .pwa-install-btn:hover { background: rgba(245,158,11,.4); }
+  .pwa-install-btn.show { display: inline-flex; align-items: center; gap: 5px; }
+
   /* ── Drag & Drop ── */
   .cell-slot[draggable="true"] { cursor: grab; }
   .cell-slot[draggable="true"]:active { cursor: grabbing; opacity: .7; }
@@ -503,6 +523,58 @@ setTimeout(() => {
     display: none; position: fixed; inset: 0;
     background: rgba(10,16,28,.85); backdrop-filter: blur(8px);
     z-index: 9999; align-items: center; justify-content: center; padding: 20px;
+  }
+
+  /* ── License / Pro Lock ── */
+  .pro-locked {
+    position: relative; pointer-events: none; opacity: .45;
+    filter: grayscale(.4);
+  }
+  .pro-locked::after {
+    content: '🔒 Pro'; position: absolute; top: 4px; right: 4px;
+    background: #f59e0b; color: #1a1a1a; font-size: .65rem; font-weight: 800;
+    padding: 2px 8px; border-radius: 10px; pointer-events: auto; cursor: pointer;
+    z-index: 10;
+  }
+  .pro-badge-header {
+    background: rgba(245,158,11,.2); border: 1px solid rgba(245,158,11,.4);
+    color: white; padding: 4px 12px; border-radius: 20px; font-size: .75rem;
+    font-weight: 600; cursor: pointer; transition: all .15s;
+  }
+  .pro-badge-header:hover { background: rgba(245,158,11,.4); }
+  .pro-badge-header.active { background: rgba(34,197,94,.2); border-color: rgba(34,197,94,.4); }
+  #licenseModal {
+    display: none; position: fixed; inset: 0;
+    background: rgba(10,16,28,.85); backdrop-filter: blur(8px);
+    z-index: 9999; align-items: center; justify-content: center; padding: 20px;
+  }
+  .license-box {
+    background: white; border-radius: 20px; padding: 40px 36px;
+    max-width: 480px; width: 100%;
+    box-shadow: 0 32px 80px rgba(0,0,0,.4);
+    animation: fadeUp .4s ease both;
+  }
+  .license-box h2 { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+  .license-input {
+    width: 100%; padding: 14px; border: 2px solid var(--border);
+    border-radius: 10px; font-family: 'DM Sans', monospace; font-size: 1rem;
+    text-align: center; letter-spacing: .15em; text-transform: uppercase;
+    color: var(--text); background: #f8fafc; transition: border-color .15s;
+  }
+  .license-input:focus { outline: none; border-color: var(--primary-light); background: white; }
+  .license-input.valid { border-color: #22c55e; background: #f0fdf4; }
+  .license-input.invalid { border-color: #ef4444; background: #fef2f2; }
+  .license-status {
+    padding: 10px 14px; border-radius: 8px; font-size: .82rem; font-weight: 600;
+    margin: 12px 0; text-align: center;
+  }
+  .license-status.free { background: #fef3c7; color: #92400e; }
+  .license-status.pro { background: #dcfce7; color: #15803d; }
+  .license-status.error { background: #fee2e2; color: #dc2626; }
+  .pdf-watermark {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) rotate(-35deg);
+    font-size: 5rem; color: rgba(0,0,0,.06); font-weight: 900; pointer-events: none;
+    z-index: 0; white-space: nowrap;
   }
   .api-box {
     background: white; border-radius: 20px; padding: 40px 36px;
@@ -554,6 +626,12 @@ setTimeout(() => {
     <div style="font-size:.72rem;opacity:.65;margin-top:1px;">KI-Dienstplaner · CH/DE/AT · Feiertage automatisch</div>
   </div>
   <div style="margin-left:auto;display:flex;gap:10px;align-items:center;">
+    <button class="pwa-install-btn" id="pwaInstallBtn" onclick="installPWA()">
+      📥 App installieren
+    </button>
+    <button class="pro-badge-header" id="licenseBadge" onclick="openLicenseModal()">
+      🔒 Free
+    </button>
     <button class="loc-badge" onclick="openApiKeyModal()" title="Claude API-Key verwalten" id="apiKeyBadge">
       <span class="api-badge-dot off" id="apiDot"></span> API-Key
     </button>
@@ -648,6 +726,46 @@ setTimeout(() => {
     </div>
 
     <button class="btn btn-outline" onclick="closeApiKeyModal()" style="width:100%;justify-content:center;margin-top:14px;">
+      ✕ Schließen
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     LIZENZ-MODAL
+     ══════════════════════════════════════════ -->
+<div id="licenseModal">
+  <div class="license-box">
+    <h2>🔑 Lizenz aktivieren</h2>
+    <p style="font-size:.85rem;color:var(--muted);margin-bottom:16px;line-height:1.6;">
+      Gib deinen Lizenzkey ein, um alle Pro-Features freizuschalten.<br/>
+      Den Key erhältst du nach dem Kauf per E-Mail.
+    </p>
+
+    <div id="licenseStatus" class="license-status free">
+      🆓 Free-Plan aktiv — Demo-Daten & Grundfunktionen
+    </div>
+
+    <input type="text" id="licenseKeyInput" class="license-input"
+           placeholder="PRO-2026-XXXX-YYYY" maxlength="20" autocomplete="off" spellcheck="false"/>
+
+    <div style="display:flex;gap:10px;margin-top:14px;">
+      <button class="btn btn-primary" onclick="activateLicense()" style="flex:1;justify-content:center;">
+        ✓ Lizenz aktivieren
+      </button>
+      <button class="btn btn-outline" onclick="removeLicense()" style="justify-content:center;">
+        🗑️
+      </button>
+    </div>
+
+    <div style="margin-top:16px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;font-size:.78rem;color:#1e40af;line-height:1.55;">
+      <strong>Noch keinen Key?</strong><br/>
+      → <a href="https://kitaplan.save-house.de" target="_blank" style="color:#2563a8;font-weight:600;">Jetzt Pro-Version kaufen</a> (ab CHF 18/Monat)<br/>
+      → Nach Zahlung per PayPal oder Bank erhalten Sie den Key per E-Mail an<br/>
+      &nbsp;&nbsp;&nbsp;📧 <strong>info@save-house.de</strong>
+    </div>
+
+    <button class="btn btn-outline" onclick="closeLicenseModal()" style="width:100%;justify-content:center;margin-top:14px;">
       ✕ Schließen
     </button>
   </div>
@@ -1122,6 +1240,11 @@ window.onload = () => {
 // EXCEL IMPORT
 // ─────────────────────────────────────────────
 function handleFile(file) {
+  // ── Pro-Check: Excel-Import nur für Pro ──
+  if (!isPro()) {
+    if (!requirePro('Excel-Import eigener Daten')) return;
+  }
+
   // ── Check 1: Datei vorhanden? ──
   if (!file) {
     showUploadError('Keine Datei ausgewählt.');
@@ -3084,6 +3207,7 @@ function findStaffSlot(staff, week, day) {
 // DATEV-EXPORT (Lohnbuchhaltung)
 // ─────────────────────────────────────────────
 function exportDATEV() {
+  if (!requirePro('DATEV-Export')) return;
   const plan = window._planData;
   const params = window._planParams;
   if (!plan) return alert('Bitte zuerst einen Plan generieren.');
@@ -3706,6 +3830,11 @@ function renderWeekTable(wk, wi) {
 let _dragData = null;
 
 function onSlotDragStart(e, weekIdx, gruppe, day, staffName) {
+  if (!isPro()) {
+    showSwapBadge('🔒 Schichttausch ist ein Pro-Feature', 'error');
+    e.preventDefault();
+    return;
+  }
   _dragData = { weekIdx, gruppe, day, staffName };
   e.dataTransfer.effectAllowed = 'move';
   e.dataTransfer.setData('text/plain', staffName);
@@ -3965,10 +4094,19 @@ function exportPDF() {
     training: { bg:'#f5f3ff', border:'#7c3aed', label:'📋' },
   };
 
+  // ── Wasserzeichen für Free-User ──
+  const watermark = !isPro() ? `
+  <div style="position:fixed;top:35%;left:50%;transform:translate(-50%,-50%) rotate(-35deg);
+    font-size:4rem;color:rgba(0,0,0,.07);font-weight:900;pointer-events:none;
+    z-index:0;white-space:nowrap;font-family:Arial,sans-serif;">
+    KitaShift·KI — DEMO
+  </div>` : '';
+
   // ── Kopfzeile ──
   let body = `
+  ${watermark}
   <div class="pdf-header">
-    <div class="pdf-logo">🏡 KitaShift·KI</div>
+    <div class="pdf-logo">🏡 KitaShift·KI${!isPro() ? ' <span style="color:#f59e0b;font-size:.6em;">FREE</span>' : ''}</div>
     <div class="pdf-title">${kitaName}</div>
     <div class="pdf-meta">
       ${locLabel} &nbsp;·&nbsp; ${law.gesetz} &nbsp;·&nbsp; ${numG} Gruppen &nbsp;·&nbsp;
@@ -4477,8 +4615,237 @@ function downloadTemplate() {
 }
 
 // ─────────────────────────────────────────────
-// APP SELBST HERUNTERLADEN
 // ─────────────────────────────────────────────
+// LIZENZ-SYSTEM
+// ─────────────────────────────────────────────
+const LICENSE_API = 'https://kitashift-api.vercel.app/api/license'; // ← Vercel-URL anpassen!
+let _licenseData = null;
+
+function isPro() {
+  return _licenseData && _licenseData.valid && _licenseData.plan;
+}
+
+function openLicenseModal() {
+  document.getElementById('licenseModal').style.display = 'flex';
+  const saved = localStorage.getItem('kitashift_license_key') || '';
+  document.getElementById('licenseKeyInput').value = saved;
+  updateLicenseStatus();
+}
+
+function closeLicenseModal() {
+  document.getElementById('licenseModal').style.display = 'none';
+}
+
+async function activateLicense() {
+  const key = document.getElementById('licenseKeyInput').value.trim().toUpperCase();
+  if (!key) return;
+
+  const statusEl = document.getElementById('licenseStatus');
+  const inputEl = document.getElementById('licenseKeyInput');
+  statusEl.className = 'license-status free';
+  statusEl.textContent = '⏳ Lizenz wird geprüft…';
+
+  try {
+    const resp = await fetch(LICENSE_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'validate', key })
+    });
+    const data = await resp.json();
+
+    if (data.valid) {
+      _licenseData = data;
+      localStorage.setItem('kitashift_license_key', key);
+      localStorage.setItem('kitashift_license_data', JSON.stringify(data));
+      inputEl.className = 'license-input valid';
+      statusEl.className = 'license-status pro';
+      statusEl.innerHTML = `✅ <strong>${data.plan === 'traeger' ? 'Träger' : 'Pro'}-Lizenz aktiv</strong> — gültig bis ${data.validUntil}<br/>Alle Features freigeschaltet!`;
+      applyLicenseState();
+    } else {
+      inputEl.className = 'license-input invalid';
+      statusEl.className = 'license-status error';
+      statusEl.textContent = '❌ ' + (data.error || 'Ungültiger Key');
+      _licenseData = null;
+    }
+  } catch(e) {
+    // Offline-Fallback: Lokale Validierung
+    const localData = localStorage.getItem('kitashift_license_data');
+    if (localData) {
+      try {
+        _licenseData = JSON.parse(localData);
+        if (_licenseData.valid) {
+          statusEl.className = 'license-status pro';
+          statusEl.innerHTML = `✅ <strong>Lizenz aktiv</strong> (Offline-Modus)<br/>Letzte Prüfung erfolgreich.`;
+          inputEl.className = 'license-input valid';
+          applyLicenseState();
+          return;
+        }
+      } catch(e2) {}
+    }
+    statusEl.className = 'license-status error';
+    statusEl.textContent = '⚠️ Server nicht erreichbar. Bitte später erneut versuchen.';
+  }
+}
+
+function removeLicense() {
+  localStorage.removeItem('kitashift_license_key');
+  localStorage.removeItem('kitashift_license_data');
+  _licenseData = null;
+  document.getElementById('licenseKeyInput').value = '';
+  document.getElementById('licenseKeyInput').className = 'license-input';
+  updateLicenseStatus();
+  applyLicenseState();
+}
+
+function updateLicenseStatus() {
+  const statusEl = document.getElementById('licenseStatus');
+  if (isPro()) {
+    statusEl.className = 'license-status pro';
+    statusEl.innerHTML = `✅ <strong>${_licenseData.plan === 'traeger' ? 'Träger' : 'Pro'}-Lizenz aktiv</strong> — gültig bis ${_licenseData.validUntil}`;
+    document.getElementById('licenseKeyInput').className = 'license-input valid';
+  } else {
+    statusEl.className = 'license-status free';
+    statusEl.textContent = '🆓 Free-Plan aktiv — Demo-Daten & Grundfunktionen';
+    document.getElementById('licenseKeyInput').className = 'license-input';
+  }
+}
+
+function applyLicenseState() {
+  const pro = isPro();
+  const badge = document.getElementById('licenseBadge');
+
+  // Header Badge
+  if (pro) {
+    badge.textContent = '✅ ' + (_licenseData.plan === 'traeger' ? 'Träger' : 'Pro');
+    badge.classList.add('active');
+  } else {
+    badge.textContent = '🔒 Free';
+    badge.classList.remove('active');
+  }
+
+  // Excel-Import sperren/freigeben
+  const uploadZone = document.getElementById('uploadZone');
+  const fileInput = document.getElementById('fileInput');
+  const uploadBtn = uploadZone?.closest('.card')?.querySelector('.btn-primary');
+  if (!pro) {
+    if (uploadZone) uploadZone.classList.add('pro-locked');
+    if (uploadBtn) uploadBtn.classList.add('pro-locked');
+  } else {
+    if (uploadZone) uploadZone.classList.remove('pro-locked');
+    if (uploadBtn) uploadBtn.classList.remove('pro-locked');
+  }
+
+  // 2-Wochen-Plan sperren
+  const numWeeks = document.getElementById('numWeeks');
+  if (numWeeks) {
+    const opt2 = numWeeks.querySelector('option[value="2"]');
+    if (opt2) {
+      opt2.disabled = !pro;
+      opt2.textContent = pro ? '2 Wochen' : '2 Wochen 🔒 Pro';
+    }
+    if (!pro) numWeeks.value = '1';
+  }
+
+  // API-Key sperren
+  const apiBtn = document.getElementById('apiKeyBadge');
+  if (apiBtn) {
+    if (!pro) apiBtn.classList.add('pro-locked');
+    else apiBtn.classList.remove('pro-locked');
+  }
+
+  // DATEV, Drag&Drop Buttons
+  document.querySelectorAll('[onclick*="exportDATEV"]').forEach(el => {
+    if (!pro) el.classList.add('pro-locked');
+    else el.classList.remove('pro-locked');
+  });
+}
+
+// Beim Laden: Gespeicherte Lizenz prüfen
+function initLicense() {
+  const savedData = localStorage.getItem('kitashift_license_data');
+  const savedKey = localStorage.getItem('kitashift_license_key');
+  if (savedData && savedKey) {
+    try {
+      _licenseData = JSON.parse(savedData);
+      // Re-validate im Hintergrund
+      if (savedKey) {
+        fetch(LICENSE_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'validate', key: savedKey })
+        }).then(r => r.json()).then(data => {
+          if (data.valid) {
+            _licenseData = data;
+            localStorage.setItem('kitashift_license_data', JSON.stringify(data));
+          } else {
+            // Key ungültig geworden
+            _licenseData = null;
+            localStorage.removeItem('kitashift_license_data');
+          }
+          applyLicenseState();
+        }).catch(() => { /* offline — cached license bleibt */ });
+      }
+    } catch(e) { _licenseData = null; }
+  }
+  applyLicenseState();
+}
+
+// Sperr-Check Funktionen die von Features aufgerufen werden
+function requirePro(featureName) {
+  if (isPro()) return true;
+  alert(`🔒 "${featureName}" ist ein Pro-Feature.\n\nJetzt freischalten: https://kitaplan.save-house.de\nOder Lizenzkey eingeben über den 🔒-Button oben.`);
+  openLicenseModal();
+  return false;
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', initLicense);
+
+// ─────────────────────────────────────────────
+// PWA — Service Worker & Install
+// ─────────────────────────────────────────────
+let _deferredInstallPrompt = null;
+
+// Service Worker registrieren
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(reg => { console.log('[PWA] Service Worker registered:', reg.scope); })
+      .catch(err => { console.warn('[PWA] SW registration failed:', err); });
+  });
+}
+
+// Install-Prompt abfangen
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  _deferredInstallPrompt = e;
+  const btn = document.getElementById('pwaInstallBtn');
+  if (btn) btn.classList.add('show');
+});
+
+function installPWA() {
+  if (!_deferredInstallPrompt) {
+    alert('Die App kann direkt über den Browser installiert werden.\n\nChrome/Edge: Klicke auf das ⊕ Symbol in der Adressleiste.\nSafari: Teilen → Zum Home-Bildschirm.');
+    return;
+  }
+  _deferredInstallPrompt.prompt();
+  _deferredInstallPrompt.userChoice.then((result) => {
+    if (result.outcome === 'accepted') {
+      console.log('[PWA] App installed');
+      const btn = document.getElementById('pwaInstallBtn');
+      if (btn) { btn.textContent = '✅ Installiert!'; setTimeout(() => btn.classList.remove('show'), 2000); }
+    }
+    _deferredInstallPrompt = null;
+  });
+}
+
+// Wenn App bereits installiert ist
+window.addEventListener('appinstalled', () => {
+  console.log('[PWA] App was installed');
+  _deferredInstallPrompt = null;
+  const btn = document.getElementById('pwaInstallBtn');
+  if (btn) btn.classList.remove('show');
+});
 
 </script>
 </body>
