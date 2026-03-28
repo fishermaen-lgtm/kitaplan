@@ -1161,7 +1161,9 @@ function parseStaffRow(r, i) {
   const urlaubBis = parseDate(r['Urlaub_Bis'] || r['urlaub_bis'] || '');
   const schulung = (r['Schulung'] || r['schulung'] || '').toString().trim();
   const krank = (r['Krank'] || r['krank'] || '').toString().toLowerCase() === 'ja';
-  return { name, qual, gruppe, stunden, urlaubVon, urlaubBis, schulung, krank, idx: i };
+  const krankVon = parseDate(r['Krank_Von'] || r['krank_von'] || '');
+  const krankBis = parseDate(r['Krank_Bis'] || r['krank_bis'] || '');
+  return { name, qual, gruppe, stunden, urlaubVon, urlaubBis, schulung, krank, krankVon, krankBis, idx: i };
 }
 
 function parseDate(v) {
@@ -1182,18 +1184,18 @@ function loadDemoData() {
   const wed = new Date(startDate); wed.setDate(mon.getDate()+2);
 
   staffData = [
-    { name:'Anna Müller',      qual:'ErzieherIn',  gruppe:1, stunden:42, urlaubVon:null, urlaubBis:null, schulung:'', krank:false, idx:0 },
-    { name:'Klaus Weber',      qual:'ErzieherIn',  gruppe:1, stunden:42, urlaubVon:null, urlaubBis:null, schulung:'Mittwoch', krank:false, idx:1 },
-    { name:'Sarah Schmidt',    qual:'Azubi',        gruppe:1, stunden:40, urlaubVon:null, urlaubBis:null, schulung:'', krank:false, idx:2 },
-    { name:'Petra Bauer',      qual:'ErzieherIn',  gruppe:2, stunden:42, urlaubVon:mon, urlaubBis:new Date(mon.getTime()+4*86400000), schulung:'', krank:false, idx:3 },
-    { name:'Tom Fischer',      qual:'ErzieherIn',  gruppe:2, stunden:42, urlaubVon:null, urlaubBis:null, schulung:'', krank:false, idx:4 },
-    { name:'Lisa Hoffmann',    qual:'Hilfskraft',   gruppe:2, stunden:20, urlaubVon:null, urlaubBis:null, schulung:'Donnerstag', krank:false, idx:5 },
-    { name:'Maria Gonzalez',   qual:'ErzieherIn',  gruppe:3, stunden:42, urlaubVon:null, urlaubBis:null, schulung:'', krank:true, idx:6 },
-    { name:'Jan Richter',      qual:'ErzieherIn',  gruppe:3, stunden:42, urlaubVon:null, urlaubBis:null, schulung:'', krank:false, idx:7 },
-    { name:'Luisa König',      qual:'Azubi',        gruppe:3, stunden:40, urlaubVon:null, urlaubBis:null, schulung:'Dienstag', krank:false, idx:8 },
-    { name:'Hans Braun',       qual:'ErzieherIn',  gruppe:4, stunden:42, urlaubVon:null, urlaubBis:null, schulung:'', krank:false, idx:9 },
-    { name:'Susanne Wolf',     qual:'ErzieherIn',  gruppe:4, stunden:32, urlaubVon:null, urlaubBis:null, schulung:'', krank:false, idx:10 },
-    { name:'Fatima Al-Hassan', qual:'Hilfskraft',  gruppe:4, stunden:25, urlaubVon:null, urlaubBis:null, schulung:'Freitag', krank:false, idx:11 },
+    { name:'Anna Müller',      qual:'ErzieherIn',  gruppe:1, stunden:42, urlaubVon:null, urlaubBis:null, schulung:'', krank:false, krankVon:null, krankBis:null, idx:0 },
+    { name:'Klaus Weber',      qual:'ErzieherIn',  gruppe:1, stunden:42, urlaubVon:null, urlaubBis:null, schulung:'Mittwoch', krank:false, krankVon:null, krankBis:null, idx:1 },
+    { name:'Sarah Schmidt',    qual:'Azubi',        gruppe:1, stunden:40, urlaubVon:null, urlaubBis:null, schulung:'', krank:false, krankVon:null, krankBis:null, idx:2 },
+    { name:'Petra Bauer',      qual:'ErzieherIn',  gruppe:2, stunden:42, urlaubVon:mon, urlaubBis:new Date(mon.getTime()+4*86400000), schulung:'', krank:false, krankVon:null, krankBis:null, idx:3 },
+    { name:'Tom Fischer',      qual:'ErzieherIn',  gruppe:2, stunden:42, urlaubVon:null, urlaubBis:null, schulung:'', krank:false, krankVon:null, krankBis:null, idx:4 },
+    { name:'Lisa Hoffmann',    qual:'Hilfskraft',   gruppe:2, stunden:20, urlaubVon:null, urlaubBis:null, schulung:'Donnerstag', krank:false, krankVon:null, krankBis:null, idx:5 },
+    { name:'Maria Gonzalez',   qual:'ErzieherIn',  gruppe:3, stunden:42, urlaubVon:null, urlaubBis:null, schulung:'', krank:true, krankVon:null, krankBis:null,  krankVon:new Date(), krankBis:null, idx:6 },
+    { name:'Jan Richter',      qual:'ErzieherIn',  gruppe:3, stunden:42, urlaubVon:null, urlaubBis:null, schulung:'', krank:false, krankVon:null, krankBis:null, idx:7 },
+    { name:'Luisa König',      qual:'Azubi',        gruppe:3, stunden:40, urlaubVon:null, urlaubBis:null, schulung:'Dienstag', krank:false, krankVon:null, krankBis:null, idx:8 },
+    { name:'Hans Braun',       qual:'ErzieherIn',  gruppe:4, stunden:42, urlaubVon:null, urlaubBis:null, schulung:'', krank:false, krankVon:null, krankBis:null, idx:9 },
+    { name:'Susanne Wolf',     qual:'ErzieherIn',  gruppe:4, stunden:32, urlaubVon:null, urlaubBis:null, schulung:'', krank:false, krankVon:null, krankBis:null, idx:10 },
+    { name:'Fatima Al-Hassan', qual:'Hilfskraft',  gruppe:4, stunden:25, urlaubVon:null, urlaubBis:null, schulung:'Freitag', krank:false, krankVon:null, krankBis:null, idx:11 },
   ];
   renderStaffPreview();
 }
@@ -1204,40 +1206,149 @@ function loadDemoData() {
 function renderStaffPreview() {
   const list = document.getElementById('staffList');
   list.innerHTML = '';
+  const weekStart = new Date(document.getElementById('startDate').value);
+
   staffData.forEach((s, i) => {
     const color = AVATAR_COLORS[i % AVATAR_COLORS.length];
     const initials = s.name.split(' ').map(p=>p[0]).join('').substring(0,2).toUpperCase();
-    const status = getStaffStatus(s, new Date(document.getElementById('startDate').value));
+
+    const fmtDate = d => d ? d.toLocaleDateString('de-CH',{day:'2-digit',month:'2-digit',year:'numeric'}) : '';
+    const toInputVal = d => d ? d.toISOString().split('T')[0] : '';
+
+    // Urlaub-Zeile
+    const urlaubStr = (s.urlaubVon && s.urlaubBis)
+      ? `${fmtDate(s.urlaubVon)} – ${fmtDate(s.urlaubBis)}`
+      : '– kein Urlaub –';
+    const urlaubActive = s.urlaubVon && s.urlaubBis;
+    const urlaubInWeek = urlaubActive && s.urlaubVon <= new Date(weekStart.getTime()+4*86400000) && s.urlaubBis >= weekStart;
+
+    // Krank-Zeile
+    const krankVonStr = s.krankVon ? fmtDate(s.krankVon) : '';
+    const krankBisStr = s.krankBis ? fmtDate(s.krankBis) : '';
+    const krankActive = s.krank;
+    const krankDateStr = (s.krankVon && s.krankBis) ? `${krankVonStr} – ${krankBisStr}` : (s.krankVon ? `ab ${krankVonStr}` : '');
+
     list.innerHTML += `
-      <div class="staff-item">
-        <div class="staff-avatar" style="background:${color}">${initials}</div>
-        <div style="flex:1;">
-          <div class="staff-name">${s.name}</div>
-          <div class="staff-qual">${s.qual} · Gruppe ${s.gruppe} · ${s.stunden}h/Wo</div>
+      <div class="staff-item" id="staff-item-${i}" style="flex-direction:column;align-items:stretch;gap:0;padding:12px 14px;">
+
+        <!-- Zeile 1: Avatar + Name + Status -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div class="staff-avatar" style="background:${color};flex-shrink:0;">${initials}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="staff-name">${s.name}</div>
+            <div class="staff-qual">${s.qual} · Gr. ${s.gruppe} · ${s.stunden}h/Wo</div>
+          </div>
+          ${krankActive ? '<span class="pill pill-danger">🤒 Krank</span>' :
+            urlaubInWeek ? '<span class="pill pill-warn">🏖️ Urlaub</span>' :
+            s.schulung ? `<span class="pill pill-warn">📚 ${s.schulung}</span>` :
+            '<span class="pill pill-ok">✓ OK</span>'}
         </div>
-        ${status}
+
+        <!-- Zeile 2: Krank Von/Bis -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--muted);cursor:pointer;flex-shrink:0;">
+            <input type="checkbox" ${s.krank?'checked':''} onchange="toggleKrank(${i},this.checked)"
+              style="width:14px;height:14px;cursor:pointer;accent-color:#ef4444;">
+            <span style="color:#ef4444;font-weight:600;">🤒 Krank</span>
+          </label>
+          <div id="krank-dates-${i}" style="display:${s.krank?'flex':'none'};align-items:center;gap:6px;flex-wrap:wrap;">
+            <span style="font-size:.75rem;color:var(--muted);">von</span>
+            <input type="date" id="krankVon-${i}" value="${toInputVal(s.krankVon)}"
+              onchange="setKrankDate(${i})"
+              style="font-size:.75rem;padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);">
+            <span style="font-size:.75rem;color:var(--muted);">bis</span>
+            <input type="date" id="krankBis-${i}" value="${toInputVal(s.krankBis)}"
+              onchange="setKrankDate(${i})"
+              style="font-size:.75rem;padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);">
+            ${krankDateStr ? `<span style="font-size:.72rem;color:#ef4444;">${krankDateStr}</span>` : ''}
+          </div>
+        </div>
+
+        <!-- Zeile 3: Urlaub Von/Bis -->
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--muted);cursor:pointer;flex-shrink:0;">
+            <input type="checkbox" ${urlaubActive?'checked':''} onchange="toggleUrlaub(${i},this.checked)"
+              style="width:14px;height:14px;cursor:pointer;accent-color:#f59e0b;">
+            <span style="color:#d97706;font-weight:600;">🏖️ Urlaub</span>
+          </label>
+          <div id="urlaub-dates-${i}" style="display:${urlaubActive?'flex':'none'};align-items:center;gap:6px;flex-wrap:wrap;">
+            <span style="font-size:.75rem;color:var(--muted);">von</span>
+            <input type="date" id="urlaubVon-${i}" value="${toInputVal(s.urlaubVon)}"
+              onchange="setUrlaubDate(${i})"
+              style="font-size:.75rem;padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);">
+            <span style="font-size:.75rem;color:var(--muted);">bis</span>
+            <input type="date" id="urlaubBis-${i}" value="${toInputVal(s.urlaubBis)}"
+              onchange="setUrlaubDate(${i})"
+              style="font-size:.75rem;padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);">
+            ${urlaubActive ? `<span style="font-size:.72rem;color:#d97706;">${urlaubStr}</span>` : ''}
+          </div>
+        </div>
+
       </div>`;
   });
+
   // Summary
-  const total = staffData.length;
-  const avail = staffData.filter(s => !s.krank).length;
-  const fach  = staffData.filter(s => s.qual === 'ErzieherIn').length;
+  const total  = staffData.length;
+  const krank  = staffData.filter(s => s.krank).length;
+  const avail  = total - krank;
+  const fach   = staffData.filter(s => s.qual === 'ErzieherIn').length;
   document.getElementById('staffSummary').innerHTML = `
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
       <span class="pill pill-ok">✓ ${avail} verfügbar</span>
       <span class="pill pill-blue">🎓 ${fach} Fachkräfte</span>
+      ${krank > 0 ? `<span class="pill pill-danger">🤒 ${krank} krank</span>` : ''}
       <span class="pill pill-grey">👥 ${total} gesamt</span>
     </div>`;
   document.getElementById('staffCard').style.display = '';
   document.getElementById('generateBtn').disabled = false;
 }
 
+function toggleKrank(idx, checked) {
+  staffData[idx].krank = checked;
+  const datesDiv = document.getElementById('krank-dates-' + idx);
+  if (datesDiv) datesDiv.style.display = checked ? 'flex' : 'none';
+  // Wenn aktiviert und noch kein Von-Datum: heute setzen
+  if (checked && !staffData[idx].krankVon) {
+    const today = new Date().toISOString().split('T')[0];
+    const vonEl = document.getElementById('krankVon-' + idx);
+    if (vonEl) { vonEl.value = today; staffData[idx].krankVon = new Date(today); }
+  }
+  if (!checked) { staffData[idx].krankVon = null; staffData[idx].krankBis = null; }
+  renderStaffPreview();
+}
+
+function setKrankDate(idx) {
+  const von = document.getElementById('krankVon-' + idx)?.value;
+  const bis = document.getElementById('krankBis-' + idx)?.value;
+  staffData[idx].krankVon = von ? new Date(von) : null;
+  staffData[idx].krankBis = bis ? new Date(bis) : null;
+  // Datum-Anzeige sofort aktualisieren ohne vollständigen Re-Render
+  renderStaffPreview();
+}
+
+function toggleUrlaub(idx, checked) {
+  const datesDiv = document.getElementById('urlaub-dates-' + idx);
+  if (datesDiv) datesDiv.style.display = checked ? 'flex' : 'none';
+  if (!checked) {
+    staffData[idx].urlaubVon = null;
+    staffData[idx].urlaubBis = null;
+  }
+  renderStaffPreview();
+}
+
+function setUrlaubDate(idx) {
+  const von = document.getElementById('urlaubVon-' + idx)?.value;
+  const bis = document.getElementById('urlaubBis-' + idx)?.value;
+  staffData[idx].urlaubVon = von ? new Date(von) : null;
+  staffData[idx].urlaubBis = bis ? new Date(bis) : null;
+  renderStaffPreview();
+}
+
 function getStaffStatus(s, weekStart) {
   if (s.krank) return '<span class="pill pill-danger">🤒 Krank</span>';
   if (s.urlaubVon && s.urlaubBis) {
-    const ws = weekStart;
-    const we = new Date(ws); we.setDate(we.getDate()+4);
-    if (s.urlaubVon <= we && s.urlaubBis >= ws) return '<span class="pill pill-warn">🏖️ Urlaub</span>';
+    const we = new Date(weekStart); we.setDate(we.getDate()+4);
+    if (s.urlaubVon <= we && s.urlaubBis >= weekStart) return '<span class="pill pill-warn">🏖️ Urlaub</span>';
   }
   if (s.schulung) return `<span class="pill pill-warn">📚 Schulung ${s.schulung}</span>`;
   return '<span class="pill pill-ok">✓ OK</span>';
@@ -1247,6 +1358,21 @@ function getStaffStatus(s, weekStart) {
 // GENERATE PLAN  (Claude API)
 // ─────────────────────────────────────────────
 async function generatePlan() {
+  // ── Vorab-Checks ──
+  if (staffData.length === 0) {
+    alert('Bitte zuerst Mitarbeiterdaten laden (Demo-Daten oder Excel-Import).');
+    return;
+  }
+  const startDate = document.getElementById('startDate').value;
+  if (!startDate) {
+    alert('Bitte ein Startdatum auswählen.');
+    return;
+  }
+  if (!window._location) {
+    alert('Bitte zuerst einen Standort auswählen (📍 Button oben).');
+    return;
+  }
+
   document.getElementById('emptyState').style.display = 'none';
   document.getElementById('loadingState').style.display = '';
   document.getElementById('planOutput').style.display = 'none';
@@ -1260,33 +1386,48 @@ async function generatePlan() {
   ];
   let mi = 0;
   const int = setInterval(() => {
-    document.getElementById('loadingMsg').textContent = msgs[mi++ % msgs.length];
+    const el = document.getElementById('loadingMsg');
+    if (el) el.textContent = msgs[mi++ % msgs.length];
   }, 1500);
 
   const params = {
-    kitaName: document.getElementById('kitaName').value,
-    startDate: document.getElementById('startDate').value,
-    numWeeks: parseInt(document.getElementById('numWeeks').value),
-    openTime: document.getElementById('openTime').value,
-    closeTime: document.getElementById('closeTime').value,
-    meetingDay: document.getElementById('meetingDay').value,
-    meetingTime: document.getElementById('meetingTime').value,
-    minFach: parseInt(document.getElementById('minFach').value),
-    numGruppen: getNumGruppen(),
+    kitaName:    document.getElementById('kitaName').value || 'Kita',
+    startDate:   startDate,
+    numWeeks:    parseInt(document.getElementById('numWeeks').value) || 1,
+    openTime:    document.getElementById('openTime')?.value || '06:45',
+    closeTime:   document.getElementById('closeTime')?.value || '18:15',
+    meetingDay:  document.getElementById('meetingDay')?.value || 'Mittwoch',
+    meetingTime: document.getElementById('meetingTime')?.value || '14:00',
+    minFach:     parseInt(document.getElementById('minFach')?.value) || 1,
+    numGruppen:  getNumGruppen(),
     gruppenNames: getGruppenNames(),
   };
 
-  const prompt = buildPrompt(params);
-
+  // ── Immer zuerst lokal generieren (Fallback bereit) ──
+  let localPlan;
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,
-        messages: [{ role: 'user', content: prompt }],
-        system: `Du bist ein erfahrener Kita-Planungsexperte. Erstelle einen detaillierten Wochenplan als JSON.
+    localPlan = generateLocalPlan(params);
+  } catch(e) {
+    console.warn('LocalPlan Fehler:', e);
+    localPlan = null;
+  }
+
+  // ── KI-Versuch (schlägt bei file:// oder CORS fehl → Fallback) ──
+  const isOnline = location.protocol === 'https:' || location.protocol === 'http:';
+  if (isOnline) {
+    try {
+      let prompt;
+      try { prompt = buildPrompt(params); }
+      catch(e) { throw new Error('Prompt-Fehler: ' + e.message); }
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 4000,
+          messages: [{ role: 'user', content: prompt }],
+          system: `Du bist ein erfahrener Kita-Planungsexperte. Erstelle einen detaillierten Wochenplan als JSON.
 Antworte NUR mit einem validen JSON-Objekt, keine Backticks, kein Prosatext davor oder danach.
 Das JSON hat folgende Struktur:
 {
@@ -1296,39 +1437,50 @@ Das JSON hat folgende Struktur:
       "label": "KW XX",
       "days": {
         "Montag": {
-          "Gruppe 1": [ {"name":"…","zeit":"07:00-13:00","typ":"dienst"}, … ],
-          "Gruppe 2": [ … ],
-          "Gruppe 3": [ … ],
-          "Gruppe 4": [ … ],
-          "Pausen": [ {"name":"Frühstück 🥐","zeit":"08:30-09:00","typ":"pause"}, … ],
+          "Gruppe 1": [ {"name":"…","zeit":"07:00-13:00","typ":"dienst","schicht":"frueh","nettoH":6.0}, … ],
+          "Randdienst": [ {"name":"…","zeit":"06:45-07:45","typ":"rand"} ],
+          "Pausen": [],
           "Meetings": []
-        },
-        … weitere Tage
+        }
       }
     }
   ],
-  "warnings": ["Achtung: …"],
+  "warnings": [],
   "stats": { "totalSlots": 0, "abwesend": 0, "schulungen": 0 }
 }`
-      })
-    });
-    clearInterval(int);
-    const data = await response.json();
-    const raw = data.content.map(c => c.text || '').join('');
-    let plan;
-    try {
-      const clean = raw.replace(/```json|```/g, '').trim();
-      plan = JSON.parse(clean);
-    } catch(e) {
-      // fallback: generate plan locally
-      plan = generateLocalPlan(params);
+        })
+      });
+
+      if (!response.ok) throw new Error('API ' + response.status);
+      clearInterval(int);
+      const data = await response.json();
+      const raw = (data.content || []).map(c => c.text || '').join('');
+      try {
+        const clean = raw.replace(/```json|```/g, '').trim();
+        const plan = JSON.parse(clean);
+        window._planData   = plan;
+        window._planParams = params;
+        renderPlan(plan, params);
+        return;
+      } catch(e) {
+        // JSON parse fehlgeschlagen → local fallback
+      }
+    } catch(err) {
+      // CORS, Netzwerk, API-Fehler → local fallback
+      console.info('KI nicht erreichbar, lokale Generierung:', err.message);
     }
-    renderPlan(plan, params);
-  } catch (err) {
-    clearInterval(int);
-    // Fallback to local generation
-    const plan = generateLocalPlan(params);
-    renderPlan(plan, params);
+  }
+
+  // ── Lokaler Fallback ──
+  clearInterval(int);
+  if (localPlan) {
+    window._planData   = localPlan;
+    window._planParams = params;
+    renderPlan(localPlan, params);
+  } else {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('emptyState').style.display = '';
+    alert('Plan konnte nicht erstellt werden. Bitte Daten prüfen und erneut versuchen.');
   }
 }
 
@@ -2170,7 +2322,7 @@ function generateLocalPlan(params) {
   const weeks = [];
   let totalSlots = 0, abwesend = 0, schulungen = 0;
   const warnings = [];
-  const numG = params.numGruppen || numG; // use param or current UI value
+  const numG = params.numGruppen || getNumGruppen(); // use param or current UI value
 
   // ── Landesspezifische Werte ──
   const law = getLaw();
@@ -2292,7 +2444,13 @@ function generateLocalPlan(params) {
         const groupSlots = [];
         staffData.filter(s => s.gruppe === g).forEach((s, si) => {
           const isUrlaub = s.urlaubVon && s.urlaubBis && dayDate >= s.urlaubVon && dayDate <= s.urlaubBis;
-          if (s.krank)       { groupSlots.push({ name:s.name, zeit:'–', typ:'absent', schicht:'absent', grund:'Krank 🤒' }); abwesend++; return; }
+          // Krank: entweder generell krank ODER im Krank-Zeitraum
+          const isKrank = s.krank && (
+            (!s.krankVon && !s.krankBis) ||  // kein Datum = generell krank
+            (s.krankVon && !s.krankBis && dayDate >= s.krankVon) ||  // nur Von = ab Datum
+            (s.krankVon && s.krankBis && dayDate >= s.krankVon && dayDate <= s.krankBis)  // Von bis Bis
+          );
+          if (isKrank)       { groupSlots.push({ name:s.name, zeit:'–', typ:'absent', schicht:'absent', grund:'Krank 🤒' }); abwesend++; return; }
           if (isUrlaub)      { groupSlots.push({ name:s.name, zeit:'–', typ:'absent', schicht:'absent', grund:'Urlaub 🏖️' }); abwesend++; return; }
           if (s.schulung===day){ groupSlots.push({ name:s.name, zeit:'09:00–16:00', typ:'training', schicht:'training', grund:'Schulung 📚' }); schulungen++; return; }
 
