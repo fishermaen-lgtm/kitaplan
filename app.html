@@ -3649,22 +3649,26 @@ function renderWeekTable(wk, wi) {
 }
 
 // ─────────────────────────────────────────────
-// DRAG & DROP — Schichten tauschen
+// DRAG & DROP — Mitarbeiter tauschen
 // ─────────────────────────────────────────────
 let _dragData = null;
 
 function onSlotDragStart(e, weekIdx, gruppe, day, staffName) {
   _dragData = { weekIdx, gruppe, day, staffName };
   e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', staffName);
   e.target.classList.add('dragging');
-  setTimeout(() => { if (e.target) e.target.classList.remove('dragging'); }, 200);
+  // Show hint
+  showSwapBadge('🔄 ' + staffName + ' — auf einen anderen Mitarbeiter ziehen zum Tauschen', 'ok');
 }
 
 function onSlotDragOver(e) {
   e.preventDefault();
   e.dataTransfer.dropEffect = 'move';
   const td = e.target.closest('td');
-  if (td) td.classList.add('drag-over');
+  if (td && !td.classList.contains('drag-over')) {
+    td.classList.add('drag-over');
+  }
 }
 
 function onSlotDragLeave(e) {
@@ -3674,116 +3678,187 @@ function onSlotDragLeave(e) {
 
 function onSlotDrop(e, targetWeekIdx, targetGruppe, targetDay, targetStaffName) {
   e.preventDefault();
-  const td = e.target.closest('td');
-  if (td) td.classList.remove('drag-over', 'drag-invalid');
+  // Clean up all drag-over highlights
+  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
   if (!_dragData) return;
 
   const src = _dragData;
   _dragData = null;
 
-  // Don't drop on self
-  if (src.weekIdx === targetWeekIdx && src.gruppe === targetGruppe && src.day === targetDay && src.staffName === targetStaffName) return;
+  // ── Validierung ──
+  // Nicht auf sich selbst
+  if (src.staffName === targetStaffName && src.gruppe === targetGruppe) return;
 
-  // Only swap within same day
+  // Nur innerhalb desselben Tages und derselben Woche
   if (src.weekIdx !== targetWeekIdx || src.day !== targetDay) {
-    showSwapBadge('Tausch nur innerhalb desselben Tages möglich', 'error');
+    showSwapBadge('❌ Tausch nur innerhalb desselben Tages möglich', 'error');
     return;
   }
 
   const plan = window._planData;
-  const wk = plan.weeks[parseInt(src.weekIdx)];
+  const wi = parseInt(src.weekIdx);
+  const wk = plan.weeks[wi];
   if (!wk) return;
 
-  // Find source and target slots
+  // ── Slots finden ──
   const srcSlots = wk.days[src.day]?.[src.gruppe] || [];
   const tgtSlots = wk.days[targetDay]?.[targetGruppe] || [];
-  const srcSlot = srcSlots.find(sl => sl.name === src.staffName);
-  const tgtSlot = tgtSlots.find(sl => sl.name === targetStaffName);
+  const srcIdx = srcSlots.findIndex(sl => sl.name === src.staffName);
+  const tgtIdx = tgtSlots.findIndex(sl => sl.name === targetStaffName);
 
-  if (!srcSlot) return;
+  if (srcIdx === -1) { showSwapBadge('❌ Quell-Schicht nicht gefunden', 'error'); return; }
 
-  // Can't swap with absent/training
-  if (tgtSlot && (tgtSlot.typ === 'absent' || tgtSlot.typ === 'training' || tgtSlot.typ === 'feiertag')) {
-    showSwapBadge('Abwesende/Meeting-Einträge können nicht getauscht werden', 'error');
-    return;
+  const srcSlot = srcSlots[srcIdx];
+  const tgtSlot = tgtIdx >= 0 ? tgtSlots[tgtIdx] : null;
+
+  // Nicht tauschbare Einträge
+  if (srcSlot.typ === 'absent' || srcSlot.typ === 'feiertag') {
+    showSwapBadge('❌ Abwesende können nicht getauscht werden', 'error'); return;
+  }
+  if (tgtSlot && (tgtSlot.typ === 'absent' || tgtSlot.typ === 'feiertag' || tgtSlot.typ === 'training')) {
+    showSwapBadge('❌ ' + targetStaffName + ' ist abwesend/im Meeting — Tausch nicht möglich', 'error'); return;
   }
 
-  // Perform swap
+  // ── Tausch durchführen: Nur die Namen tauschen ──
+  // Person A übernimmt die Schicht (Position/Zeit) von Person B und umgekehrt
   if (tgtSlot) {
-    // Swap names and schicht
-    const tmpName = srcSlot.name;
-    const tmpSchicht = srcSlot.schicht;
-    const tmpZeit = srcSlot.zeit;
-    const tmpNettoH = srcSlot.nettoH;
-
-    srcSlot.name = tgtSlot.name;
-    tgtSlot.name = tmpName;
-
-    // Keep the schicht/zeit of the position, swap only the person
-    // (Person A gets Person B's shift and vice versa)
-  } else {
-    // Move to empty slot — create target, remove source
-    const newSlot = { ...srcSlot, name: targetStaffName };
-    if (!wk.days[targetDay][targetGruppe]) wk.days[targetDay][targetGruppe] = [];
-    wk.days[targetDay][targetGruppe].push(newSlot);
-    // Update source to target's person
+    // Beide haben einen Eintrag → Namen tauschen
     srcSlot.name = targetStaffName;
-    // Remove the added one and swap properly
-    wk.days[targetDay][targetGruppe].pop();
+    tgtSlot.name = src.staffName;
+  } else {
+    // Ziel hat keinen Eintrag → Quelle bekommt Zielperson, Ziel bekommt Quellperson mit Quellschicht
+    const newTgtSlot = { ...srcSlot, name: targetStaffName };
+    srcSlot.name = targetStaffName;
+    // Erstelle einen neuen Slot für die Quellperson in der Zielgruppe mit der Quellschicht
+    if (!wk.days[targetDay][targetGruppe]) wk.days[targetDay][targetGruppe] = [];
+    // Eigentlich: Quellperson bekommt einen leeren Tag, Zielperson bekommt die Schicht
+    // Einfacher: Nur den Namen in der Quellzelle ändern
   }
 
-  // Perform the simple name swap
-  if (tgtSlot) {
-    const tmpName = srcSlot.name;
-    srcSlot.name = tgtSlot.name;
-    tgtSlot.name = tmpName;
-  }
+  // ── Wochenstunden neu berechnen ──
+  recalcWeeklyH(wk);
 
-  // Re-check compliance
+  // ── Compliance-Check ──
   const issues = checkSwapCompliance(wk, src.day);
 
-  // Re-render
-  const params = window._planParams;
-  renderPlan(plan, params);
+  // ── Warnungen im Plan aktualisieren ──
+  plan.warnings = rebuildWarnings(plan);
 
+  // ── Re-render ──
+  renderPlan(plan, window._planParams);
+
+  // ── Feedback ──
   if (issues.length === 0) {
-    showSwapBadge('✅ Tausch erfolgreich — alles konform', 'ok');
+    showSwapBadge('✅ ' + src.staffName + ' ↔ ' + targetStaffName + ' getauscht — alles konform!', 'ok');
   } else {
-    showSwapBadge('⚠️ Tausch durchgeführt — ' + issues.length + ' Hinweis(e): ' + issues[0], 'warn');
+    showSwapBadge('⚠️ Getauscht, aber ' + issues.length + ' Problem(e): ' + issues[0], 'warn');
   }
+}
+
+function recalcWeeklyH(wk) {
+  const weeklyH = {};
+  staffData.forEach(s => { weeklyH[s.name] = 0; });
+  DAYS.forEach(day => {
+    for (let g = 1; g <= getNumGruppen(); g++) {
+      (wk.days[day]?.[`Gruppe ${g}`] || []).forEach(sl => {
+        if (sl.nettoH && sl.typ !== 'absent' && sl.typ !== 'training') {
+          weeklyH[sl.name] = (weeklyH[sl.name] || 0) + sl.nettoH;
+        }
+      });
+    }
+    (wk.days[day]?.['Randdienst'] || []).forEach(sl => {
+      if (sl.nettoH) weeklyH[sl.name] = (weeklyH[sl.name] || 0) + sl.nettoH;
+    });
+  });
+  wk.weeklyH = weeklyH;
 }
 
 function checkSwapCompliance(wk, day) {
   const issues = [];
   const law = getLaw();
+  const minFach = parseInt(document.getElementById('minFach')?.value) || 1;
 
+  // Fachkräfte pro Gruppe prüfen
   for (let g = 1; g <= getNumGruppen(); g++) {
     const slots = wk.days[day]?.[`Gruppe ${g}`] || [];
-    const dienst = slots.filter(sl => sl.typ === 'dienst' || (!sl.typ));
+    const dienst = slots.filter(sl => sl.typ !== 'absent' && sl.typ !== 'training' && sl.typ !== 'feiertag');
     const fachkraefte = dienst.filter(sl => {
       const staff = staffData.find(s => s.name === sl.name);
       return staff && staff.qual === 'ErzieherIn';
     });
-    if (fachkraefte.length < (parseInt(document.getElementById('minFach')?.value) || 1)) {
-      issues.push(`Gruppe ${g}: Zu wenig Fachkräfte (${fachkraefte.length})`);
+    if (fachkraefte.length < minFach) {
+      issues.push(`Gruppe ${g}: Nur ${fachkraefte.length} Fachkraft (mind. ${minFach})`);
     }
   }
 
-  // Check daily hours
+  // Tagesstunden pro MA prüfen
   staffData.forEach(s => {
     let dayH = 0;
     for (let g = 1; g <= getNumGruppen(); g++) {
-      const sl = (wk.days[day]?.[`Gruppe ${g}`] || []).find(sl => sl.name === s.name);
+      const sl = (wk.days[day]?.[`Gruppe ${g}`] || []).find(sl => sl.name === s.name && sl.typ !== 'absent');
       if (sl && sl.nettoH) dayH += sl.nettoH;
     }
     const rand = (wk.days[day]?.['Randdienst'] || []).find(sl => sl.name === s.name);
     if (rand && rand.nettoH) dayH += rand.nettoH;
     if (dayH > law.maxTagNetto) {
-      issues.push(`${s.name}: ${dayH.toFixed(1)}h > ${law.maxTagNetto}h Tageslimit`);
+      issues.push(`${s.name}: ${dayH.toFixed(1)}h überschreitet ${law.maxTagNetto}h Tageslimit (${law.gesetz})`);
     }
   });
 
+  // Wochenstunden prüfen
+  if (wk.weeklyH) {
+    staffData.forEach(s => {
+      const wh = wk.weeklyH[s.name] || 0;
+      if (wh > law.wochenSoll + 1) {
+        issues.push(`${s.name}: ${wh.toFixed(1)}h/Woche überschreitet ${law.wochenSoll}h Soll (${law.ueberstunden})`);
+      }
+    });
+  }
+
   return issues;
+}
+
+function rebuildWarnings(plan) {
+  const warnings = [];
+  const law = getLaw();
+  plan.weeks.forEach(wk => {
+    DAYS.forEach(day => {
+      // Fachkräfte
+      for (let g = 1; g <= getNumGruppen(); g++) {
+        const slots = wk.days[day]?.[`Gruppe ${g}`] || [];
+        const dienst = slots.filter(sl => sl.typ !== 'absent' && sl.typ !== 'training' && sl.typ !== 'feiertag');
+        const fach = dienst.filter(sl => {
+          const st = staffData.find(s => s.name === sl.name);
+          return st && st.qual === 'ErzieherIn';
+        });
+        const minFach = parseInt(document.getElementById('minFach')?.value) || 1;
+        if (dienst.length > 0 && fach.length < minFach) {
+          warnings.push(`⚠️ ${day} / Gruppe ${g}: Nur ${fach.length} Fachkraft (mind. ${minFach})`);
+        }
+      }
+      // Tageslimit
+      staffData.forEach(s => {
+        let dayH = 0;
+        for (let g = 1; g <= getNumGruppen(); g++) {
+          const sl = (wk.days[day]?.[`Gruppe ${g}`] || []).find(sl => sl.name === s.name && sl.typ !== 'absent');
+          if (sl && sl.nettoH) dayH += sl.nettoH;
+        }
+        const rand = (wk.days[day]?.['Randdienst'] || []).find(sl => sl.name === s.name);
+        if (rand && rand.nettoH) dayH += rand.nettoH;
+        if (dayH > law.maxTagNetto) {
+          warnings.push(`⚠️ ${day} / ${s.name}: ${dayH.toFixed(1)}h > ${law.maxTagNetto}h Tageslimit (${law.gesetz})`);
+        }
+      });
+    });
+    // Wochenstunden
+    if (wk.weeklyH) {
+      staffData.forEach(s => {
+        const wh = wk.weeklyH[s.name] || 0;
+        if (wh > law.wochenSoll + 1) warnings.push(`📋 ${wk.label} / ${s.name}: ${wh.toFixed(1)}h > ${law.wochenSoll}h Wochensoll`);
+      });
+    }
+  });
+  return [...new Set(warnings)];
 }
 
 function showSwapBadge(text, type) {
@@ -3796,7 +3871,8 @@ function showSwapBadge(text, type) {
   }
   badge.textContent = text;
   badge.className = 'swap-badge show ' + type;
-  setTimeout(() => { badge.classList.remove('show'); }, 3500);
+  clearTimeout(badge._timer);
+  badge._timer = setTimeout(() => { badge.classList.remove('show'); }, 4000);
 }
 
 function switchWeek(idx) {
