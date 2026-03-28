@@ -479,6 +479,52 @@ setTimeout(() => {
     font-weight: 600; cursor: pointer; transition: all .15s;
   }
   .loc-badge:hover { background: rgba(255,255,255,.25); }
+
+  /* ── API Key Modal ── */
+  #apiKeyModal {
+    display: none; position: fixed; inset: 0;
+    background: rgba(10,16,28,.85); backdrop-filter: blur(8px);
+    z-index: 9999; align-items: center; justify-content: center; padding: 20px;
+  }
+  .api-box {
+    background: white; border-radius: 20px; padding: 40px 36px;
+    max-width: 480px; width: 100%;
+    box-shadow: 0 32px 80px rgba(0,0,0,.4);
+    animation: fadeUp .4s ease both;
+  }
+  .api-box h2 { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+  .api-box .api-sub { font-size: .85rem; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+  .api-input-wrap { position: relative; margin-bottom: 14px; }
+  .api-input-wrap input {
+    width: 100%; padding: 12px 44px 12px 14px; border: 2px solid var(--border);
+    border-radius: 10px; font-family: 'DM Sans', monospace; font-size: .88rem;
+    color: var(--text); background: #f8fafc; transition: border-color .15s;
+  }
+  .api-input-wrap input:focus { outline: none; border-color: var(--primary-light); background: white; }
+  .api-input-wrap input.api-valid { border-color: #22c55e; }
+  .api-input-wrap input.api-invalid { border-color: #ef4444; }
+  .api-toggle-vis {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; font-size: 1.1rem; color: var(--muted);
+  }
+  .api-status {
+    display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+    border-radius: 8px; font-size: .82rem; font-weight: 600; margin-bottom: 16px;
+  }
+  .api-status.connected { background: #dcfce7; color: #15803d; }
+  .api-status.disconnected { background: #fef3c7; color: #92400e; }
+  .api-status.error { background: #fee2e2; color: #dc2626; }
+  .api-actions { display: flex; gap: 10px; }
+  .api-actions button { flex: 1; }
+  .api-info {
+    background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px;
+    padding: 12px; font-size: .78rem; color: #1e40af; line-height: 1.55; margin-top: 14px;
+  }
+  .api-info a { color: #2563a8; font-weight: 600; }
+  .api-badge-connected { background: rgba(34,197,94,.2) !important; border-color: rgba(34,197,94,.4) !important; }
+  .api-badge-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+  .api-badge-dot.on { background: #22c55e; }
+  .api-badge-dot.off { background: #f59e0b; }
 </style>
 </head>
 <body>
@@ -490,6 +536,9 @@ setTimeout(() => {
     <div style="font-size:.72rem;opacity:.65;margin-top:1px;">KI-Dienstplaner · CH/DE/AT · Feiertage automatisch</div>
   </div>
   <div style="margin-left:auto;display:flex;gap:10px;align-items:center;">
+    <button class="loc-badge" onclick="openApiKeyModal()" title="Claude API-Key verwalten" id="apiKeyBadge">
+      <span class="api-badge-dot off" id="apiDot"></span> API-Key
+    </button>
     <button class="loc-badge" onclick="downloadApp()" title="App als HTML-Datei herunterladen"
       style="background:rgba(245,158,11,.2);border-color:rgba(245,158,11,.4);">
       ⬇️ App herunterladen
@@ -538,6 +587,55 @@ setTimeout(() => {
     <div class="loc-note">
       🔒 Deine Auswahl wird lokal gespeichert · Jederzeit änderbar über den 📍 Button oben
     </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     API-KEY MODAL
+     ══════════════════════════════════════════ -->
+<div id="apiKeyModal">
+  <div class="api-box">
+    <h2>🔑 Claude API-Key</h2>
+    <p class="api-sub">
+      Mit einem eigenen API-Key nutzt du die volle KI-Planung von Claude.<br/>
+      Ohne Key wird der lokale Plangenerator verwendet.
+    </p>
+
+    <div id="apiStatus" class="api-status disconnected">
+      <span id="apiStatusIcon">⚠️</span>
+      <span id="apiStatusText">Kein API-Key gespeichert — lokaler Modus aktiv</span>
+    </div>
+
+    <div class="api-input-wrap">
+      <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." autocomplete="off" spellcheck="false"/>
+      <button class="api-toggle-vis" onclick="toggleApiKeyVis()" title="Anzeigen/Verbergen">👁️</button>
+    </div>
+
+    <div class="api-actions">
+      <button class="btn btn-primary" onclick="saveApiKey()" style="justify-content:center;">
+        💾 Speichern
+      </button>
+      <button class="btn btn-outline" onclick="removeApiKey()" style="justify-content:center;">
+        🗑️ Entfernen
+      </button>
+    </div>
+
+    <button class="btn btn-outline" onclick="testApiKey()" style="width:100%;justify-content:center;margin-top:10px;">
+      🧪 Verbindung testen
+    </button>
+
+    <div class="api-info">
+      <strong>So bekommst du einen API-Key:</strong><br/>
+      1. Erstelle ein Konto auf <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br/>
+      2. Gehe zu „API Keys" → „Create Key"<br/>
+      3. Kopiere den Key und füge ihn hier ein<br/><br/>
+      🔒 Der Key wird nur lokal in deinem Browser gespeichert (localStorage) und nie an Dritte übermittelt.
+      Er wird ausschließlich direkt an die Anthropic API gesendet.
+    </div>
+
+    <button class="btn btn-outline" onclick="closeApiKeyModal()" style="width:100%;justify-content:center;margin-top:14px;">
+      ✕ Schließen
+    </button>
   </div>
 </div>
 
@@ -830,6 +928,9 @@ setTimeout(() => {
           </button>
           <button class="btn btn-outline" style="width:100%;justify-content:center;font-size:.82rem;" onclick="showZeiterfassung()">
             🕐 Stundenkonto & Überstunden
+          </button>
+          <button class="btn btn-outline" style="width:100%;justify-content:center;font-size:.82rem;color:#7c3aed;border-color:#ddd6fe;background:#f5f3ff;" onclick="exportDATEV()">
+            📊 DATEV-Export (Lohnbuchhaltung)
           </button>
           <button class="btn btn-outline" style="width:100%;justify-content:center;font-size:.82rem;" onclick="showMonatsübersicht()">
             📅 Monatsübersicht generieren
@@ -1423,9 +1524,10 @@ async function generatePlan() {
     localPlan = null;
   }
 
-  // ── KI-Versuch (schlägt bei file:// oder CORS fehl → Fallback) ──
+  // ── KI-Versuch (schlägt bei file:// oder ohne API-Key fehl → Fallback) ──
   const isOnline = location.protocol === 'https:' || location.protocol === 'http:';
-  if (isOnline) {
+  const apiKey = localStorage.getItem('kitashift_api_key') || '';
+  if (isOnline && apiKey) {
     try {
       let prompt;
       try { prompt = buildPrompt(params); }
@@ -1433,7 +1535,12 @@ async function generatePlan() {
 
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 4000,
@@ -1478,8 +1585,10 @@ Das JSON hat folgende Struktur:
       }
     } catch(err) {
       // CORS, Netzwerk, API-Fehler → local fallback
-      console.info('KI nicht erreichbar, lokale Generierung:', err.message);
+      console.info('KI nicht erreichbar:', err.message, apiKey ? '(API-Key vorhanden)' : '(kein API-Key)');
     }
+  } else if (isOnline && !apiKey) {
+    console.info('Kein API-Key gespeichert → lokale Generierung. API-Key über 🔑 Button oben hinterlegen.');
   }
 
   // ── Lokaler Fallback ──
@@ -1936,6 +2045,129 @@ function changeLocation() {
   window._location = null;
   document.getElementById('locationModal').style.display = 'flex';
 }
+
+// ══════════════════════════════════════════════════════════════════
+//  API-KEY VERWALTUNG
+// ══════════════════════════════════════════════════════════════════
+
+function openApiKeyModal() {
+  const modal = document.getElementById('apiKeyModal');
+  modal.style.display = 'flex';
+  const saved = localStorage.getItem('kitashift_api_key') || '';
+  document.getElementById('apiKeyInput').value = saved;
+  updateApiStatus();
+}
+
+function closeApiKeyModal() {
+  document.getElementById('apiKeyModal').style.display = 'none';
+}
+
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key) {
+    alert('Bitte einen API-Key eingeben.');
+    return;
+  }
+  if (!key.startsWith('sk-ant-')) {
+    alert('Der Key muss mit "sk-ant-" beginnen.\nBitte prüfe deinen Anthropic API-Key.');
+    return;
+  }
+  localStorage.setItem('kitashift_api_key', key);
+  updateApiStatus();
+  updateApiHeaderBadge();
+}
+
+function removeApiKey() {
+  localStorage.removeItem('kitashift_api_key');
+  document.getElementById('apiKeyInput').value = '';
+  updateApiStatus();
+  updateApiHeaderBadge();
+}
+
+function toggleApiKeyVis() {
+  const inp = document.getElementById('apiKeyInput');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+async function testApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim() || localStorage.getItem('kitashift_api_key') || '';
+  if (!key) {
+    updateApiStatusUI('error', '❌', 'Kein API-Key vorhanden');
+    return;
+  }
+  updateApiStatusUI('disconnected', '⏳', 'Teste Verbindung…');
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 10,
+        messages: [{ role: 'user', content: 'Antworte nur mit: OK' }]
+      })
+    });
+    if (resp.ok) {
+      updateApiStatusUI('connected', '✅', 'Verbindung erfolgreich! KI-Planung aktiv.');
+      document.getElementById('apiKeyInput').classList.add('api-valid');
+      document.getElementById('apiKeyInput').classList.remove('api-invalid');
+      // Auto-save on successful test
+      if (key && key.startsWith('sk-ant-')) {
+        localStorage.setItem('kitashift_api_key', key);
+        updateApiHeaderBadge();
+      }
+    } else if (resp.status === 401) {
+      updateApiStatusUI('error', '❌', 'Ungültiger API-Key (401). Bitte prüfen.');
+      document.getElementById('apiKeyInput').classList.add('api-invalid');
+      document.getElementById('apiKeyInput').classList.remove('api-valid');
+    } else if (resp.status === 429) {
+      updateApiStatusUI('error', '⚠️', 'Rate-Limit erreicht (429). Bitte später erneut versuchen.');
+    } else {
+      updateApiStatusUI('error', '❌', 'API-Fehler: ' + resp.status);
+    }
+  } catch(e) {
+    updateApiStatusUI('error', '❌', 'Netzwerkfehler: ' + e.message);
+  }
+}
+
+function updateApiStatus() {
+  const key = localStorage.getItem('kitashift_api_key') || '';
+  if (key) {
+    const masked = key.substring(0, 10) + '••••••' + key.slice(-4);
+    updateApiStatusUI('connected', '🔑', 'API-Key gespeichert: ' + masked);
+  } else {
+    updateApiStatusUI('disconnected', '⚠️', 'Kein API-Key gespeichert — lokaler Modus aktiv');
+  }
+}
+
+function updateApiStatusUI(cls, icon, text) {
+  const el = document.getElementById('apiStatus');
+  el.className = 'api-status ' + cls;
+  document.getElementById('apiStatusIcon').textContent = icon;
+  document.getElementById('apiStatusText').textContent = text;
+}
+
+function updateApiHeaderBadge() {
+  const key = localStorage.getItem('kitashift_api_key') || '';
+  const badge = document.getElementById('apiKeyBadge');
+  const dot = document.getElementById('apiDot');
+  if (key) {
+    badge.classList.add('api-badge-connected');
+    dot.classList.add('on');
+    dot.classList.remove('off');
+  } else {
+    badge.classList.remove('api-badge-connected');
+    dot.classList.remove('on');
+    dot.classList.add('off');
+  }
+}
+
+// Init API badge on page load
+document.addEventListener('DOMContentLoaded', () => updateApiHeaderBadge());
 
 // ══════════════════════════════════════════════════════════════════
 //  ARBEITSZEIT-EINSTELLUNGEN
@@ -2646,55 +2878,315 @@ function renderPlan(plan, params) {
 }
 
 // ─────────────────────────────────────────────
-// ZEITERFASSUNG – Stundenkonto-Übersicht
+// ZEITERFASSUNG – Stundenkonto-Übersicht (mit Tagesstunden)
 // ─────────────────────────────────────────────
 function showZeiterfassung() {
   const plan = window._planData;
   if (!plan) return alert('Bitte zuerst einen Plan generieren.');
-  let html = `<h3 style="font-family:'Playfair Display',serif;color:var(--primary);margin-bottom:16px;">🕐 Stundenkonto – alle Mitarbeiter</h3>`;
+
+  let html = `<h3 style="font-family:'Playfair Display',serif;color:var(--primary);margin-bottom:6px;">🕐 Stundenkonto – alle Mitarbeiter</h3>
+  <p style="font-size:.78rem;color:var(--muted);margin-bottom:16px;">Tagesstunden (netto) pro Mitarbeiter und Woche · Soll-Ist-Vergleich</p>`;
 
   plan.weeks.forEach((wk, wi) => {
-    html += `<div style="margin-bottom:20px;"><strong style="font-size:.85rem;color:var(--primary);">${wk.label}</strong>
-    <table style="width:100%;border-collapse:collapse;font-size:.82rem;margin-top:8px;">
+    html += `<div style="margin-bottom:24px;"><strong style="font-size:.9rem;color:var(--primary);">${wk.label}</strong>
+    <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:.8rem;margin-top:8px;">
     <thead><tr style="background:var(--primary);color:white;">
-      <th style="padding:6px 10px;text-align:left;">Mitarbeiter</th>
-      <th style="padding:6px 10px;text-align:center;">Qualifikation</th>
-      <th style="padding:6px 10px;text-align:center;">Soll (h)</th>
-      <th style="padding:6px 10px;text-align:center;">Geplant (h)</th>
-      <th style="padding:6px 10px;text-align:center;">Differenz</th>
-      <th style="padding:6px 10px;text-align:center;">Status</th>
+      <th style="padding:7px 10px;text-align:left;white-space:nowrap;">Mitarbeiter</th>
+      <th style="padding:7px 8px;text-align:center;font-size:.72rem;">Qual.</th>`;
+    DAYS.forEach(d => {
+      html += `<th style="padding:7px 6px;text-align:center;font-size:.72rem;">${d.substring(0,2)}</th>`;
+    });
+    html += `<th style="padding:7px 8px;text-align:center;background:#0f2944;">Ist (h)</th>
+      <th style="padding:7px 8px;text-align:center;background:#0f2944;">Soll (h)</th>
+      <th style="padding:7px 8px;text-align:center;background:#0f2944;">+/−</th>
+      <th style="padding:7px 8px;text-align:center;background:#0f2944;">Status</th>
     </tr></thead><tbody>`;
 
-    staffData.forEach(s => {
-      const ist = wk.weeklyH ? (wk.weeklyH[s.name] || 0) : 0;
-      const soll = s.stunden / 5 * 5; // weekly
-      const diff = ist - soll;
-      const status = ist === 0 ? '<span style="color:#94a3b8">—</span>' :
-        Math.abs(diff) <= 1 ? '<span style="color:#16a34a">✓ OK</span>' :
-        diff > 1 ? `<span style="color:#dc2626">+${diff.toFixed(1)}h Überstunden</span>` :
-        `<span style="color:#f59e0b">${diff.toFixed(1)}h Unterstunden</span>`;
-      const rowBg = ist === 0 ? '' : Math.abs(diff) > 1 ? 'background:#fff7ed;' : '';
+    staffData.forEach((s, si) => {
+      const rowBg = si % 2 === 0 ? '' : 'background:#f8fafc;';
       html += `<tr style="${rowBg}border-bottom:1px solid #e2e8f0;">
-        <td style="padding:6px 10px;font-weight:600;">${s.name}</td>
-        <td style="padding:6px 10px;text-align:center;color:#64748b;">${s.qual}</td>
-        <td style="padding:6px 10px;text-align:center;">${s.stunden.toFixed(1)}</td>
-        <td style="padding:6px 10px;text-align:center;font-weight:600;">${ist.toFixed(1)}</td>
-        <td style="padding:6px 10px;text-align:center;">${diff >= 0 ? '+' : ''}${diff.toFixed(1)}</td>
-        <td style="padding:6px 10px;text-align:center;">${status}</td>
-      </tr>`;
+        <td style="padding:5px 10px;font-weight:600;white-space:nowrap;">${s.name}</td>
+        <td style="padding:5px 6px;text-align:center;color:var(--muted);font-size:.72rem;">${s.qual.substring(0,3)}</td>`;
+
+      let wochenIst = 0;
+      DAYS.forEach(day => {
+        const tagesH = getStaffDayHours(s, wk, day);
+        wochenIst += tagesH;
+        let cellStyle = 'text-align:center;font-size:.78rem;';
+        if (tagesH === 0) {
+          // Check if absent
+          const absentSlot = findStaffSlot(s, wk, day);
+          if (absentSlot && absentSlot.typ === 'absent') {
+            const grund = absentSlot.grund || '';
+            const icon = grund.includes('Krank') ? '🤒' : '🏖️';
+            html += `<td style="${cellStyle}color:#dc2626;">${icon}</td>`;
+          } else {
+            html += `<td style="${cellStyle}color:#cbd5e1;">–</td>`;
+          }
+        } else {
+          const law = getLaw();
+          const overDay = tagesH > law.maxTagNetto;
+          cellStyle += overDay ? 'color:#dc2626;font-weight:700;' : 'font-weight:600;';
+          html += `<td style="${cellStyle}">${tagesH.toFixed(1)}</td>`;
+        }
+      });
+
+      const soll = s.stunden;
+      const diff = wochenIst - soll;
+      const status = wochenIst === 0 ? '<span style="color:#94a3b8">—</span>' :
+        Math.abs(diff) <= 1 ? '<span style="color:#16a34a">✓</span>' :
+        diff > 1 ? `<span style="color:#dc2626">⬆</span>` :
+        `<span style="color:#f59e0b">⬇</span>`;
+      const diffColor = Math.abs(diff) <= 1 ? '' : diff > 1 ? 'color:#dc2626;' : 'color:#f59e0b;';
+
+      html += `<td style="padding:5px 8px;text-align:center;font-weight:700;">${wochenIst.toFixed(1)}</td>
+        <td style="padding:5px 8px;text-align:center;color:var(--muted);">${soll.toFixed(1)}</td>
+        <td style="padding:5px 8px;text-align:center;font-weight:600;${diffColor}">${diff >= 0 ? '+' : ''}${diff.toFixed(1)}</td>
+        <td style="padding:5px 8px;text-align:center;">${status}</td></tr>`;
     });
-    html += `</tbody></table></div>`;
+
+    // Summenzeile
+    let gesamtIst = 0, gesamtSoll = 0;
+    staffData.forEach(s => {
+      gesamtIst += DAYS.reduce((sum, day) => sum + getStaffDayHours(s, wk, day), 0);
+      gesamtSoll += s.stunden;
+    });
+    const gesamtDiff = gesamtIst - gesamtSoll;
+    html += `<tr style="background:#e8f4fd;font-weight:700;border-top:2px solid var(--primary);">
+      <td style="padding:6px 10px;" colspan="2">Σ Gesamt</td>`;
+    DAYS.forEach(day => {
+      const tagesGesamt = staffData.reduce((sum, s) => sum + getStaffDayHours(s, wk, day), 0);
+      html += `<td style="padding:5px 6px;text-align:center;font-size:.78rem;">${tagesGesamt.toFixed(1)}</td>`;
+    });
+    html += `<td style="padding:5px 8px;text-align:center;">${gesamtIst.toFixed(1)}</td>
+      <td style="padding:5px 8px;text-align:center;color:var(--muted);">${gesamtSoll.toFixed(1)}</td>
+      <td style="padding:5px 8px;text-align:center;">${gesamtDiff >= 0 ? '+' : ''}${gesamtDiff.toFixed(1)}</td>
+      <td></td></tr>`;
+
+    html += `</tbody></table></div></div>`;
   });
 
-  // Show in output area as overlay card
-  const out = document.getElementById('planOutput');
+  html += `<div style="display:flex;gap:10px;margin-top:12px;">
+    <button onclick="exportDATEV()" class="btn btn-primary" style="font-size:.82rem;">📊 DATEV-Export</button>
+    <button onclick="this.closest('div[style]').remove()" class="btn btn-outline" style="font-size:.82rem;">Schließen</button>
+  </div>`;
+
   const div = document.createElement('div');
   div.style = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;';
-  div.innerHTML = `<div style="background:white;border-radius:16px;padding:28px;max-width:760px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+  div.innerHTML = `<div style="background:white;border-radius:16px;padding:28px;max-width:960px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);">
     ${html}
-    <button onclick="this.closest('div[style]').remove()" class="btn btn-outline" style="margin-top:12px;">Schliessen</button>
   </div>`;
   document.body.appendChild(div);
+}
+
+// Hilfsfunktionen für Stundenzuordnung
+function getStaffDayHours(staff, week, day) {
+  let total = 0;
+  for (let g = 1; g <= getNumGruppen(); g++) {
+    const slots = (week.days[day]?.[`Gruppe ${g}`]) || [];
+    const sl = slots.find(sl => sl.name === staff.name && sl.typ !== 'absent' && sl.typ !== 'training');
+    if (sl && sl.nettoH) total += sl.nettoH;
+  }
+  const rand = (week.days[day]?.['Randdienst'] || []).find(sl => sl.name === staff.name);
+  if (rand && rand.nettoH) total += rand.nettoH;
+  return total;
+}
+
+function findStaffSlot(staff, week, day) {
+  for (let g = 1; g <= getNumGruppen(); g++) {
+    const slots = (week.days[day]?.[`Gruppe ${g}`]) || [];
+    const sl = slots.find(sl => sl.name === staff.name);
+    if (sl) return sl;
+  }
+  return null;
+}
+
+// ─────────────────────────────────────────────
+// DATEV-EXPORT (Lohnbuchhaltung)
+// ─────────────────────────────────────────────
+function exportDATEV() {
+  const plan = window._planData;
+  const params = window._planParams;
+  if (!plan) return alert('Bitte zuerst einen Plan generieren.');
+  if (typeof XLSX === 'undefined') return alert('Excel-Bibliothek nicht geladen. Bitte Seite neu laden.');
+
+  const wb = XLSX.utils.book_new();
+  const law = getLaw();
+  const land = window._location?.land || 'CH';
+  const kitaName = params?.kitaName || 'Kita';
+  const startDate = new Date(params?.startDate || new Date());
+
+  // ── Blatt 1: Tagesstunden (DATEV Lodas-kompatibel) ──
+  const header1 = [
+    'Personalnr', 'Name', 'Qualifikation', 'Gruppe',
+    'Woche', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag',
+    'Ist-Stunden', 'Soll-Stunden', 'Differenz', 'Überstunden', 'Fehlgrund'
+  ];
+  const rows1 = [header1];
+
+  plan.weeks.forEach((wk, wi) => {
+    staffData.forEach((s, si) => {
+      const pnr = String(si + 1).padStart(4, '0');
+      let wochenIst = 0;
+      const tage = [];
+      const fehlgruende = [];
+
+      DAYS.forEach(day => {
+        const h = getStaffDayHours(s, wk, day);
+        wochenIst += h;
+        tage.push(h);
+
+        const slot = findStaffSlot(s, wk, day);
+        if (slot && slot.typ === 'absent') {
+          const grund = slot.grund || 'Abwesend';
+          if (grund.includes('Krank')) fehlgruende.push(day.substring(0,2) + ':K');
+          else if (grund.includes('Urlaub')) fehlgruende.push(day.substring(0,2) + ':U');
+          else fehlgruende.push(day.substring(0,2) + ':A');
+        }
+      });
+
+      const soll = s.stunden;
+      const diff = wochenIst - soll;
+      const ueberstunden = diff > 0 ? diff : 0;
+
+      rows1.push([
+        pnr, s.name, s.qual, s.gruppe,
+        wk.label,
+        ...tage.map(h => h > 0 ? h : ''),
+        wochenIst, soll, diff, ueberstunden,
+        fehlgruende.join(', ') || ''
+      ]);
+    });
+  });
+
+  const ws1 = XLSX.utils.aoa_to_sheet(rows1);
+  ws1['!cols'] = [
+    {wch:10}, {wch:20}, {wch:14}, {wch:8},
+    {wch:8}, {wch:8}, {wch:10}, {wch:10}, {wch:12}, {wch:8},
+    {wch:12}, {wch:12}, {wch:10}, {wch:12}, {wch:18}
+  ];
+
+  // Header formatieren
+  const hdrStyle = {
+    font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 10 },
+    fill: { fgColor: { rgb: '7C3AED' } },
+    alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+    border: { bottom: { style: 'thin', color: { rgb: '4C1D95' } } }
+  };
+  header1.forEach((_, ci) => {
+    const ref = XLSX.utils.encode_cell({ r: 0, c: ci });
+    if (ws1[ref]) ws1[ref].s = hdrStyle;
+  });
+
+  // Datenzeilen formatieren
+  for (let r = 1; r < rows1.length; r++) {
+    const even = r % 2 === 0;
+    for (let c = 0; c < header1.length; c++) {
+      const ref = XLSX.utils.encode_cell({ r, c });
+      if (!ws1[ref]) ws1[ref] = { v: '', t: 's' };
+      const val = rows1[r][c];
+      // Nummernformat
+      if (c >= 5 && c <= 13 && typeof val === 'number') {
+        ws1[ref].t = 'n';
+        ws1[ref].z = '0.0';
+      }
+      const isDiff = c === 12;
+      const isOver = c === 13 && val > 0;
+      ws1[ref].s = {
+        font: {
+          name: 'Arial', sz: 9,
+          color: { rgb: isDiff && val < -1 ? 'F59E0B' : isDiff && val > 1 ? 'DC2626' : isOver ? 'DC2626' : '1E293B' },
+          bold: c <= 1 || isDiff || isOver
+        },
+        fill: { fgColor: { rgb: even ? 'FAF5FF' : 'FFFFFF' } },
+        alignment: { horizontal: c <= 3 ? 'left' : 'center', vertical: 'center' },
+        border: { bottom: { style: 'thin', color: { rgb: 'E2E8F0' } } }
+      };
+    }
+  }
+
+  XLSX.utils.book_append_sheet(wb, ws1, 'Tagesstunden');
+
+  // ── Blatt 2: Zusammenfassung (je MA über alle Wochen) ──
+  const header2 = ['Personalnr', 'Name', 'Qualifikation', 'Soll/Woche (h)', 'Gesamt Ist (h)', 'Gesamt Soll (h)', 'Gesamt Differenz (h)', 'Bewertung'];
+  const rows2 = [header2];
+
+  staffData.forEach((s, si) => {
+    const pnr = String(si + 1).padStart(4, '0');
+    let gesamtIst = 0;
+    plan.weeks.forEach(wk => {
+      DAYS.forEach(day => { gesamtIst += getStaffDayHours(s, wk, day); });
+    });
+    const gesamtSoll = s.stunden * plan.weeks.length;
+    const diff = gesamtIst - gesamtSoll;
+    const bewertung = Math.abs(diff) <= plan.weeks.length ? 'OK' : diff > 0 ? 'Überstunden' : 'Unterstunden';
+    rows2.push([pnr, s.name, s.qual, s.stunden, gesamtIst, gesamtSoll, diff, bewertung]);
+  });
+
+  const ws2 = XLSX.utils.aoa_to_sheet(rows2);
+  ws2['!cols'] = [{wch:10},{wch:20},{wch:14},{wch:14},{wch:14},{wch:14},{wch:18},{wch:14}];
+  header2.forEach((_, ci) => {
+    const ref = XLSX.utils.encode_cell({ r: 0, c: ci });
+    if (ws2[ref]) ws2[ref].s = hdrStyle;
+  });
+  for (let r = 1; r < rows2.length; r++) {
+    for (let c = 0; c < header2.length; c++) {
+      const ref = XLSX.utils.encode_cell({ r, c });
+      if (!ws2[ref]) ws2[ref] = { v: '', t: 's' };
+      const val = rows2[r][c];
+      if (c >= 3 && c <= 6 && typeof val === 'number') {
+        ws2[ref].t = 'n';
+        ws2[ref].z = '0.0';
+      }
+      ws2[ref].s = {
+        font: { name: 'Arial', sz: 10, bold: c <= 1 || c === 7,
+          color: { rgb: c === 6 && val > 1 ? 'DC2626' : c === 6 && val < -1 ? 'F59E0B' : c === 7 && val === 'Überstunden' ? 'DC2626' : c === 7 && val === 'OK' ? '16A34A' : '1E293B' }
+        },
+        fill: { fgColor: { rgb: r % 2 === 0 ? 'FAF5FF' : 'FFFFFF' } },
+        alignment: { horizontal: c <= 2 ? 'left' : 'center' },
+        border: { bottom: { style: 'thin', color: { rgb: 'E2E8F0' } } }
+      };
+    }
+  }
+  XLSX.utils.book_append_sheet(wb, ws2, 'Zusammenfassung');
+
+  // ── Blatt 3: Metadaten (für Lohnbüro/Steuerberater) ──
+  const meta = [
+    ['KitaShift·KI — DATEV-Stundenexport'],
+    [''],
+    ['Kita-Name', kitaName],
+    ['Standort', `${land} / ${window._location?.region || ''}`],
+    ['Zeitraum', `${startDate.toLocaleDateString('de-DE')} (${plan.weeks.length} Woche${plan.weeks.length > 1 ? 'n' : ''})`],
+    ['Arbeitsrecht', law.gesetz],
+    ['Wochensoll', `${law.wochenSoll}h`],
+    ['Max. Tagesarbeitszeit', `${law.maxTagNetto}h netto`],
+    ['Ruhezeit', `${law.ruhezeit || 11}h`],
+    [''],
+    ['Erstellt am', new Date().toLocaleDateString('de-DE') + ' ' + new Date().toLocaleTimeString('de-DE', {hour:'2-digit',minute:'2-digit'})],
+    ['Software', 'KitaShift·KI v1.0 — kitaplan.save-house.de'],
+    [''],
+    ['Hinweis', 'Dieser Export dient als Arbeitshilfe für die Lohnbuchhaltung.'],
+    ['', 'Die Daten sollten vor der Verarbeitung in DATEV Lodas/Lohn&Gehalt geprüft werden.'],
+    ['', 'Personalnummern sind intern vergeben und müssen ggf. angepasst werden.'],
+    [''],
+    ['Fehlgrund-Codes', 'K = Krank · U = Urlaub · A = Abwesend (sonstig)'],
+  ];
+
+  const ws3 = XLSX.utils.aoa_to_sheet(meta);
+  ws3['!cols'] = [{wch:28},{wch:50}];
+  // Titel formatieren
+  const titleRef = 'A1';
+  if (ws3[titleRef]) ws3[titleRef].s = {
+    font: { bold: true, sz: 14, color: { rgb: '7C3AED' } }
+  };
+
+  XLSX.utils.book_append_sheet(wb, ws3, 'Metadaten');
+
+  // Dateiname
+  const dateStr = startDate.toISOString().substring(0,10).replace(/-/g,'');
+  const filename = `DATEV_Stunden_${kitaName.replace(/[^a-zA-Z0-9äöüÄÖÜß]/g,'_')}_${dateStr}.xlsx`;
+  XLSX.writeFile(wb, filename);
 }
 
 function copyWeekPrompt() {
@@ -3654,16 +4146,6 @@ function downloadTemplate() {
 // ─────────────────────────────────────────────
 // APP SELBST HERUNTERLADEN
 // ─────────────────────────────────────────────
-function downloadApp() {
-  const html = document.documentElement.outerHTML;
-  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'KitaShiftKI_app.html';
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 </script>
 </body>
