@@ -1,15 +1,87 @@
-KitaShift·KI
-© 2026 [Matthias Bieler]
-Alle Rechte vorbehalten.
+================================================================================
+  KitaShift·KI — KI-gestützter Dienstplaner für Kitas in CH, DE & AT
+  Copyright (c) 2026 BDS Bieler Distribution Service
+================================================================================
 
-Erstellt: März 2026
-Domain: kitaplan.save-house.de
-Entwickelt mit Claude AI (Anthropic)
+URHEBER / COPYRIGHT HOLDER
+  BDS Bieler Distribution Service
+  Inhaber: Matthias Bieler
+  Drosselweg 74, 06849 Dessau-Roßlau, Deutschland
+  E-Mail: info@save-house.de
+  Web:    https://kitaplan.save-house.de
 
-Dieses Software-Produkt, einschließlich aller HTML-, CSS- und 
-JavaScript-Dateien, ist urheberrechtlich geschützt.
-Vervielfältigung, Weitergabe oder Nutzung ohne ausdrückliche 
-schriftliche Genehmigung des Urhebers ist untersagt.
+URHEBERSCHUTZ
+  Dieses Werk ist urheberrechtlich geschützt gemäß:
+  • Deutsches Urheberrechtsgesetz (UrhG)
+  • Schweizer Urheberrechtsgesetz (URG)
+  • Österreichisches Urheberrechtsgesetz (UrhG AT)
+  • Berner Übereinkunft (internationale Geltung in 181 Ländern)
 
-Marke: "KitaShift·KI" — Markenanmeldung empfohlen beim DPMA 
-(dpma.de) oder IGE (ige.ch), Klasse 42 (Software/SaaS).
+SCHUTZGEGENSTAND
+  Alle in diesem Repository enthaltenen Dateien und Werke sind urheberrechtlich
+  geschützt, insbesondere:
+  • app.html          — Quellcode, Algorithmen, UI-Design, Logik
+  • index.html        — Design, Texte, Struktur der Verkaufsseite
+  • KitaShiftKI_Offline.html — Offline-Version der App
+  • download.html     — Download-Seite
+  • legal.html        — Rechtstexte
+  • Alle enthaltenen Algorithmen (Feiertags-Berechnung, Arbeitsrecht-Logik,
+    Schichtplanung, Randstunden-Logik, Gruppen-Zuweisung)
+  • Das Markenzeichen "KitaShift·KI"
+
+NUTZUNGSRECHTE (ENDNUTZER)
+  Die kostenlose Version (Free) darf für private und nicht-kommerzielle
+  Nutzung in Kindertagesstätten verwendet werden.
+
+  Es ist NICHT gestattet:
+  ✗ Den Quellcode zu kopieren, zu verändern oder als eigenes Werk auszugeben
+  ✗ Die Software ohne Lizenz kommerziell weiterzuverkaufen
+  ✗ Den Copyright-Hinweis zu entfernen oder zu verändern
+  ✗ Reverse Engineering zum Zweck der Nachentwicklung
+  ✗ Die Software unter anderem Namen anzubieten
+
+  Für kommerzielle Nutzung und Weitervertrieb:
+  → Reseller-Programm: info@save-house.de (40% recurring Provision)
+  → White-Label-Lizenz: auf Anfrage
+
+DRITTANBIETER-KOMPONENTEN
+  Diese Software nutzt folgende Drittanbieter-Komponenten unter ihren
+  jeweiligen Open-Source-Lizenzen:
+
+  • SheetJS / xlsx.js (https://sheetjs.com)
+    Lizenz: Apache 2.0
+    Copyright (c) SheetJS Contributors
+
+  • Claude API (https://anthropic.com)
+    Nutzungsbedingungen: https://www.anthropic.com/legal/aup
+    Anthropic PBC, San Francisco, CA, USA
+
+  • Google Fonts — DM Sans, Playfair Display
+    Lizenz: SIL Open Font License (OFL)
+    Quelle: https://fonts.google.com
+
+  • Fraunces Font
+    Lizenz: SIL Open Font License (OFL)
+
+  Diese Drittanbieter-Lizenzen betreffen ausschließlich die genannten
+  Komponenten und übertragen keine Rechte am Gesamtwerk.
+
+MARKE
+  "KitaShift·KI" ist ein Markenzeichen von BDS Bieler Distribution Service.
+  Markenanmeldung beim DPMA (Deutsches Patent- und Markenamt) in Vorbereitung.
+  Die Verwendung des Namens oder Logos ohne schriftliche Genehmigung ist untersagt.
+
+HAFTUNGSAUSSCHLUSS
+  Die Software wird "wie besehen" bereitgestellt. Der Urheber übernimmt keine
+  Haftung für Fehler, Datenverluste oder rechtliche Konsequenzen aus der
+  Nutzung der Software. Die Software ersetzt keine Rechtsberatung. Für die
+  Einhaltung des Arbeitsrechts ist der jeweilige Arbeitgeber verantwortlich.
+
+KONTAKT FÜR LIZENZANFRAGEN
+  info@save-house.de
+  Betreff: "KitaShift·KI Lizenzanfrage"
+
+================================================================================
+  © 2026 BDS Bieler Distribution Service — Alle Rechte vorbehalten.
+  All rights reserved. Tous droits réservés.
+================================================================================

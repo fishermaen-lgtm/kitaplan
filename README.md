@@ -58,3 +58,15 @@ Domain: kitaplan.save-house.de (CNAME-Eintrag beim Provider setzen)
 
 ---
 © 2026 KitaShift·KI · Matthias B. · save-house.de
+
+---
+
+## Copyright & Lizenz
+
+© 2026 **BDS Bieler Distribution Service** — Matthias Bieler, Dessau-Roßlau
+
+Alle Rechte vorbehalten. Urheberrechtlich geschützt gemäß UrhG (DE), URG (CH) und Berner Übereinkunft.  
+Unbefugte Vervielfältigung oder Weiterverbreitung ist untersagt.  
+Vollständige Lizenzinformationen: [COPYRIGHT.txt](COPYRIGHT.txt)
+
+Kontakt für Lizenzanfragen: [info@save-house.de](mailto:info@save-house.de)
