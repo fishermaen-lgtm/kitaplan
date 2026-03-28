@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>KitaShift·KI herunterladen – KI-Dienstplaner für Kitas</title>
+<meta name="description" content="KitaShift·KI kostenlos herunterladen — KI-gestützter Dienstplaner für Kitas in CH, DE & AT. Eine HTML-Datei, läuft im Browser, auch offline."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;}
+
+/* ── Hero ── */
+.hero{
+  background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f2944 100%);
+  padding:60px 24px 80px;
+  text-align:center;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  position:relative;
+  overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 800px 400px at 50% 0%,rgba(37,99,168,.2),transparent);
+  pointer-events:none;
+}
+.logo{font-size:3rem;margin-bottom:16px;}
+.hero h1{font-size:clamp(2rem,5vw,3.2rem);font-weight:800;line-height:1.15;margin-bottom:16px;
+         background:linear-gradient(135deg,#fff 40%,#7dd3fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero p{color:rgba(255,255,255,.6);font-size:1.05rem;max-width:540px;margin:0 auto 36px;line-height:1.6;}
+.badge-row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:36px;}
+.badge{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:20px;
+       padding:6px 14px;font-size:.8rem;color:rgba(255,255,255,.75);}
+
+/* ── Download Box ── */
+.dl-box{
+  background:white;color:#1e293b;border-radius:20px;
+  padding:40px;max-width:480px;margin:0 auto;
+  box-shadow:0 24px 64px rgba(0,0,0,.5);
+}
+.dl-box-icon{font-size:2.5rem;text-align:center;margin-bottom:8px;}
+.dl-box-name{text-align:center;font-size:1.2rem;font-weight:800;color:#1a3a5c;margin-bottom:4px;}
+.dl-box-sub{text-align:center;font-size:.82rem;color:#94a3b8;margin-bottom:24px;}
+.dl-btn{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;padding:16px;border-radius:12px;text-decoration:none;
+  font-size:1rem;font-weight:700;margin-bottom:12px;
+  transition:all .15s;border:none;cursor:pointer;
+}
+.dl-btn-primary{background:#1a3a5c;color:white;box-shadow:0 4px 16px rgba(26,58,92,.3);}
+.dl-btn-primary:hover{background:#2563a8;box-shadow:0 6px 24px rgba(37,99,168,.4);}
+.dl-btn-secondary{background:#f0fdf4;color:#15803d;border:1.5px solid #bbf7d0 !important;}
+.dl-btn-secondary:hover{background:#dcfce7;}
+.dl-trust{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:16px;}
+.dl-trust span{font-size:.75rem;color:#94a3b8;}
+.dl-trust span::before{content:'✓ ';}
+.version-info{
+  background:#f8fafc;border-radius:10px;padding:12px 16px;
+  margin:16px 0;font-size:.8rem;color:#64748b;
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;
+}
+
+/* ── Features ── */
+.features{max-width:900px;margin:0 auto;padding:60px 24px;}
+.features-title{text-align:center;font-size:1.6rem;font-weight:800;margin-bottom:8px;}
+.features-sub{text-align:center;color:rgba(255,255,255,.5);margin-bottom:40px;font-size:.95rem;}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;}
+.feat-card{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;padding:20px;
+}
+.feat-card-icon{font-size:1.6rem;margin-bottom:10px;}
+.feat-card-title{font-size:.95rem;font-weight:700;margin-bottom:6px;}
+.feat-card-desc{font-size:.82rem;color:rgba(255,255,255,.5);line-height:1.5;}
+
+/* ── How it works ── */
+.steps{max-width:700px;margin:0 auto;padding:20px 24px 60px;}
+.steps-title{text-align:center;font-size:1.4rem;font-weight:800;margin-bottom:32px;}
+.step{display:flex;gap:16px;align-items:flex-start;margin-bottom:24px;}
+.step-num{width:36px;height:36px;border-radius:50%;background:#2563a8;color:white;
+          display:flex;align-items:center;justify-content:center;
+          font-weight:800;font-size:.9rem;flex-shrink:0;}
+.step-content h4{font-size:.95rem;font-weight:700;margin-bottom:4px;}
+.step-content p{font-size:.83rem;color:rgba(255,255,255,.5);line-height:1.5;}
+
+/* ── Other stores ── */
+.stores{background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.06);
+        padding:40px 24px;text-align:center;}
+.stores-title{font-size:.82rem;font-weight:700;text-transform:uppercase;
+              letter-spacing:.08em;color:rgba(255,255,255,.35);margin-bottom:20px;}
+.store-links{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;}
+.store-link{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  padding:10px 20px;border-radius:10px;text-decoration:none;
+  color:rgba(255,255,255,.7);font-size:.85rem;font-weight:600;
+  transition:all .15s;
+}
+.store-link:hover{background:rgba(255,255,255,.1);color:white;}
+.store-link.soon{opacity:.5;cursor:default;}
+
+/* ── Footer ── */
+footer{text-align:center;padding:24px;color:rgba(255,255,255,.25);font-size:.78rem;
+       border-top:1px solid rgba(255,255,255,.06);}
+footer a{color:rgba(255,255,255,.35);text-decoration:none;}
+footer a:hover{color:rgba(255,255,255,.6);}
+
+@media(max-width:600px){
+  .dl-box{padding:28px 20px;}
+  .hero{padding:40px 16px 60px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HERO ══ -->
+<section class="hero">
+  <div class="logo">🏡</div>
+  <h1>KitaShift·KI</h1>
+  <p>Der KI-gestützte Dienstplaner für Kindertagesstätten — für die Schweiz, Deutschland und Österreich.</p>
+
+  <div class="badge-row">
+    <span class="badge">🇨🇭 CH ArG · 26 Kantone</span>
+    <span class="badge">🇩🇪 DE ArbZG · 16 Bundesländer</span>
+    <span class="badge">🇦🇹 AT AZG · 9 Bundesländer</span>
+    <span class="badge">🤖 KI-Wochenplan</span>
+    <span class="badge">📊 Excel Import/Export</span>
+    <span class="badge">📄 PDF Export</span>
+    <span class="badge">👥 1–12 Gruppen</span>
+  </div>
+
+  <!-- DOWNLOAD BOX -->
+  <div class="dl-box">
+    <div class="dl-box-icon">⬇️</div>
+    <div class="dl-box-name">KitaShift·KI herunterladen</div>
+    <div class="dl-box-sub">Freeware · Version 1.0 · HTML-App · ~160 KB</div>
+
+    <div class="version-info">
+      <span>📁 KitaShiftKI.html</span>
+      <span>~160 KB</span>
+      <span>Keine Installation</span>
+      <span>Läuft überall</span>
+    </div>
+
+    <a href="https://kitaplan.save-house.de/app.html"
+       download="KitaShiftKI.html"
+       class="dl-btn dl-btn-primary">
+      ⬇️ &nbsp;Jetzt kostenlos herunterladen
+    </a>
+
+    <a href="https://kitaplan.save-house.de/app.html"
+       target="_blank"
+       class="dl-btn dl-btn-secondary">
+      🌐 &nbsp;Direkt im Browser starten
+    </a>
+
+    <div class="dl-trust">
+      <span>Keine Registrierung</span>
+      <span>Kein Abo nötig</span>
+      <span>Offline nutzbar</span>
+      <span>DSGVO-konform</span>
+      <span>Kostenlos</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FEATURES ══ -->
+<section class="features">
+  <h2 class="features-title">Was KitaShift·KI kann</h2>
+  <p class="features-sub">Alles was eine Kita-Leitung täglich braucht — in einer einzigen Datei.</p>
+  <div class="feat-grid">
+    <div class="feat-card">
+      <div class="feat-card-icon">🤖</div>
+      <div class="feat-card-title">KI-Wochenplan auf Knopfdruck</div>
+      <div class="feat-card-desc">Claude AI erstellt in Sekunden einen optimierten, gesetzeskonformen Dienstplan für 1–2 Wochen.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-card-icon">⚖️</div>
+      <div class="feat-card-title">DACH-Arbeitsrecht vollständig</div>
+      <div class="feat-card-desc">CH ArG, DE ArbZG/TVöD SuE, AT AZG/SWÖ-KV — Pausen, Ruhezeiten, Wochenstunden automatisch.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-card-icon">🗓️</div>
+      <div class="feat-card-title">Alle Feiertage automatisch</div>
+      <div class="feat-card-desc">26 Kantone · 16 Bundesländer · 9 AT-Bundesländer — algorithmisch berechnet, jedes Jahr korrekt.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-card-icon">📊</div>
+      <div class="feat-card-title">Excel Import & Export</div>
+      <div class="feat-card-desc">Eigene Mitarbeiterliste hochladen, fertig. Export als formatierte Excel-Datei oder PDF.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-card-icon">👥</div>
+      <div class="feat-card-title">1–12 Gruppen frei wählbar</div>
+      <div class="feat-card-desc">Von der kleinen Betriebskita bis zur großen Stadtkita. Eigene Gruppennamen und Farben.</div>
+    </div>
+    <div class="feat-card">
+      <div class="feat-card-icon">🔒</div>
+      <div class="feat-card-title">Privat & sicher</div>
+      <div class="feat-card-desc">Alle Daten bleiben lokal in Ihrem Browser. Kein Server, keine Cloud — DSGVO-konform.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ HOW IT WORKS ══ -->
+<section class="steps">
+  <h2 class="steps-title">In 3 Schritten zum fertigen Plan</h2>
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-content">
+      <h4>Herunterladen &amp; öffnen</h4>
+      <p>Datei speichern, per Doppelklick im Browser öffnen — fertig. Keine Installation, kein Setup.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-content">
+      <h4>Mitarbeiterdaten eingeben</h4>
+      <p>Excel-Vorlage ausfüllen und hochladen, oder Demo-Daten verwenden. Standort (Kanton/Bundesland) wählen.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-content">
+      <h4>KI-Plan generieren</h4>
+      <p>Auf „Plan generieren" klicken — der KI-Wochenplan erscheint in Sekunden. Als Excel oder PDF exportieren.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ ANDERE STORES ══ -->
+<section class="stores">
+  <div class="stores-title">Auch erhältlich auf</div>
+  <div class="store-links">
+    <a href="https://kitaplan.save-house.de" class="store-link">🏡 kitaplan.save-house.de</a>
+    <a href="https://www.save-house.de" class="store-link">🌐 save-house.de</a>
+    <a href="https://www.save-house.store" class="store-link">🏪 save-house.store</a>
+    <a href="https://www.save-house.shop" class="store-link">🛍️ save-house.shop</a>
+    <span class="store-link soon">🤖 Google Play (demnächst)</span>
+  </div>
+</section>
+
+<footer>
+  KitaShift·KI · © 2026 BDS Bieler Distribution Service · Matthias Bieler · Dessau-Roßlau &nbsp;·&nbsp;
+  <a href="https://kitaplan.save-house.de/legal.html">Impressum &amp; Datenschutz</a> &nbsp;·&nbsp;
+  <a href="mailto:info@save-house.de">info@save-house.de</a>
+</footer>
+
+</body>
+</html>

@@ -239,13 +239,20 @@ footer strong{color:white;}
     <h1 class="fade-up delay-1">Der <em>intelligenteste</em> Dienstplan für Kitas</h1>
     <p class="hero-sub fade-up delay-2">KI-gestützte Schichtoptimierung für CH, DE &amp; AT. Alle 26 Kantone · 16 Bundesländer · 9 AT-Bundesländer. Vollständiges Arbeitsrecht automatisch. Excel-Import in Sekunden — fertig.</p>
     <div class="hero-ctas fade-up delay-3">
-      <a href="#demo" class="btn-primary">Kostenlos testen — 30 Tage</a>
-      <a href="#vergleich" class="btn-secondary">Marktvergleich ansehen</a>
+      <a href="app.html" class="btn-primary" style="font-size:1.05rem;padding:15px 32px;">
+        🚀 App jetzt starten — kostenlos
+      </a>
+      <a href="app.html" download="KitaShiftKI.html"
+         class="btn-secondary" id="dlBtn"
+         style="font-size:1rem;padding:15px 28px;display:inline-flex;align-items:center;gap:9px;">
+        ⬇️ App herunterladen <span style="font-size:.75rem;opacity:.7;">(HTML · offline nutzbar)</span>
+      </a>
     </div>
     <div class="hero-trust fade-up delay-4">
       <div class="trust-badge">✓ <strong>CH / DE / AT</strong> Arbeitsrecht automatisch</div>
       <div class="trust-badge">✓ <strong>Alle DACH-Regionen</strong> Feiertage automatisch</div>
       <div class="trust-badge">✓ <strong>Keine Installation</strong> – läuft im Browser</div>
+      <div class="trust-badge">✓ <strong>Direktdownload</strong> – auch offline nutzbar</div>
     </div>
   </div>
 
@@ -591,25 +598,133 @@ footer strong{color:white;}
   </div>
 </section>
 
-<!-- CTA -->
-<section id="demo" style="text-align:center;background:var(--ink);color:white;padding:80px;">
-  <div style="font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold2);margin-bottom:16px;">Los geht's</div>
-  <h2 style="font-family:'Fraunces',serif;font-size:2.5rem;font-weight:900;margin-bottom:16px;max-width:600px;margin-left:auto;margin-right:auto;">Bereit für den smartesten Dienstplan?</h2>
-  <p style="color:rgba(255,255,255,.6);margin-bottom:32px;font-size:1rem;">Kostenlos starten. Keine Kreditkarte. Keine Installation.</p>
-  <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
-    <button class="btn-primary" style="font-size:1rem;padding:14px 32px;" onclick="openPayment('KitaShift·KI Free','kostenlos','free')">Kostenlos starten →</button>
-    <button class="btn-secondary" style="font-size:1rem;padding:14px 32px;color:white;border-color:rgba(255,255,255,.3);" onclick="openPayment('KitaShift·KI Pro – Monatlich','CHF 18 / Monat','pro-monthly')">🇨🇭 Pro – CHF 18/Mo</button>
-    <button class="btn-secondary" style="font-size:1rem;padding:14px 32px;color:white;border-color:rgba(255,255,255,.3);" onclick="openPayment('KitaShift·KI Pro – Monatlich','€ 20 / Monat','pro-monthly-eur')">🇩🇪🇦🇹 Pro – € 20/Mo</button>
+<!-- ══════════════════════════════════════════
+     DIREKTDOWNLOAD SEKTION
+══════════════════════════════════════════ -->
+<section id="download" style="background:#f0f4f8;padding:72px 24px;text-align:center;border-top:1px solid #d1dbe8;">
+  <div style="max-width:760px;margin:0 auto;">
+    <div style="font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#2563a8;margin-bottom:12px;">Direktdownload</div>
+    <h2 style="font-family:'Fraunces',serif;font-size:2rem;font-weight:900;color:#1a3a5c;margin-bottom:16px;">
+      Eine Datei. Kein Abo. Immer dabei.
+    </h2>
+    <p style="color:#64748b;font-size:1rem;margin-bottom:36px;max-width:540px;margin-left:auto;margin-right:auto;">
+      Laden Sie KitaShift·KI als einzelne HTML-Datei herunter — funktioniert direkt im Browser,
+      auch offline, auf jedem Gerät. Keine Installation, keine Registrierung.
+    </p>
+
+    <!-- Download-Box -->
+    <div style="background:white;border:2px solid #1a3a5c;border-radius:20px;padding:36px;max-width:520px;margin:0 auto 36px;box-shadow:0 8px 32px rgba(26,58,92,.1);">
+      <div style="font-size:3rem;margin-bottom:12px;">🏡</div>
+      <div style="font-size:1.15rem;font-weight:700;color:#1a3a5c;margin-bottom:4px;">KitaShift·KI</div>
+      <div style="font-size:.85rem;color:#64748b;margin-bottom:20px;">Version 1.0 · HTML · ~160 KB · Freeware</div>
+
+      <a href="app.html" download="KitaShiftKI.html"
+         style="display:inline-flex;align-items:center;gap:10px;background:#1a3a5c;color:white;
+                padding:16px 36px;border-radius:12px;text-decoration:none;font-size:1rem;
+                font-weight:700;width:100%;justify-content:center;margin-bottom:14px;
+                box-shadow:0 4px 16px rgba(26,58,92,.3);transition:all .2s;"
+         onmouseover="this.style.background='#2563a8'"
+         onmouseout="this.style.background='#1a3a5c'">
+        ⬇️ &nbsp;KitaShift·KI kostenlos herunterladen
+      </a>
+
+      <a href="app.html" target="_blank"
+         style="display:inline-flex;align-items:center;gap:10px;background:#f0fdf4;color:#15803d;
+                border:1.5px solid #bbf7d0;padding:12px 28px;border-radius:10px;
+                text-decoration:none;font-size:.9rem;font-weight:600;width:100%;
+                justify-content:center;margin-bottom:18px;">
+        🌐 &nbsp;Im Browser starten (ohne Download)
+      </a>
+
+      <div style="display:flex;justify-content:center;gap:20px;font-size:.78rem;color:#94a3b8;">
+        <span>✓ Keine Registrierung</span>
+        <span>✓ Offline nutzbar</span>
+        <span>✓ DSGVO-konform</span>
+        <span>✓ Kostenlos</span>
+      </div>
+    </div>
+
+    <!-- Feature-Chips -->
+    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:28px;">
+      <span style="background:white;border:1px solid #d1dbe8;border-radius:20px;padding:6px 14px;font-size:.82rem;color:#1e293b;">🇨🇭 CH ArG · 26 Kantone</span>
+      <span style="background:white;border:1px solid #d1dbe8;border-radius:20px;padding:6px 14px;font-size:.82rem;color:#1e293b;">🇩🇪 DE ArbZG · 16 Bundesländer</span>
+      <span style="background:white;border:1px solid #d1dbe8;border-radius:20px;padding:6px 14px;font-size:.82rem;color:#1e293b;">🇦🇹 AT AZG · 9 Bundesländer</span>
+      <span style="background:white;border:1px solid #d1dbe8;border-radius:20px;padding:6px 14px;font-size:.82rem;color:#1e293b;">🤖 KI-Wochenplan</span>
+      <span style="background:white;border:1px solid #d1dbe8;border-radius:20px;padding:6px 14px;font-size:.82rem;color:#1e293b;">📊 Excel Import/Export</span>
+      <span style="background:white;border:1px solid #d1dbe8;border-radius:20px;padding:6px 14px;font-size:.82rem;color:#1e293b;">📄 PDF Export</span>
+      <span style="background:white;border:1px solid #d1dbe8;border-radius:20px;padding:6px 14px;font-size:.82rem;color:#1e293b;">👥 1–12 Gruppen</span>
+      <span style="background:white;border:1px solid #d1dbe8;border-radius:20px;padding:6px 14px;font-size:.82rem;color:#1e293b;">📅 iCal Export</span>
+    </div>
+
+    <!-- Auch auf anderen Stores -->
+    <div style="background:white;border:1px solid #d1dbe8;border-radius:14px;padding:20px 28px;max-width:520px;margin:0 auto;">
+      <div style="font-size:.8rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;">Auch erhältlich auf</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;align-items:center;">
+        <a href="https://www.save-house.store" target="_blank"
+           style="display:inline-flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #d1dbe8;
+                  padding:10px 18px;border-radius:10px;text-decoration:none;color:#1e293b;font-size:.85rem;font-weight:600;">
+          🏪 save-house.store
+        </a>
+        <a href="https://www.save-house.shop" target="_blank"
+           style="display:inline-flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #d1dbe8;
+                  padding:10px 18px;border-radius:10px;text-decoration:none;color:#1e293b;font-size:.85rem;font-weight:600;">
+          🛍️ save-house.shop
+        </a>
+        <span style="display:inline-flex;align-items:center;gap:8px;background:#f0fdf4;border:1px solid #bbf7d0;
+                     padding:10px 18px;border-radius:10px;font-size:.85rem;font-weight:600;color:#15803d;">
+          🤖 Google Play <span style="font-size:.72rem;opacity:.7;">demnächst</span>
+        </span>
+      </div>
+    </div>
+
   </div>
 </section>
 
+<!-- CTA -->
+<section id="demo" style="text-align:center;background:var(--ink);color:white;padding:80px 24px;">
+  <div style="font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold2);margin-bottom:16px;">Los geht's</div>
+  <h2 style="font-family:'Fraunces',serif;font-size:2.5rem;font-weight:900;margin-bottom:16px;max-width:600px;margin-left:auto;margin-right:auto;">Bereit für den smartesten Dienstplan?</h2>
+  <p style="color:rgba(255,255,255,.6);margin-bottom:36px;font-size:1rem;">Kostenlos herunterladen oder direkt im Browser starten. Keine Kreditkarte. Keine Installation.</p>
+  <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:20px;">
+    <a href="app.html" download="KitaShiftKI.html"
+       style="display:inline-flex;align-items:center;gap:9px;background:#f59e0b;color:#1a1a1a;
+              padding:16px 32px;border-radius:12px;text-decoration:none;font-size:1rem;
+              font-weight:800;box-shadow:0 4px 20px rgba(245,158,11,.4);">
+      ⬇️ Kostenlos herunterladen
+    </a>
+    <a href="app.html" target="_blank"
+       style="display:inline-flex;align-items:center;gap:9px;background:transparent;color:white;
+              border:2px solid rgba(255,255,255,.35);padding:16px 28px;border-radius:12px;
+              text-decoration:none;font-size:1rem;font-weight:700;">
+      🌐 Im Browser starten
+    </a>
+    <button class="btn-secondary" style="font-size:.95rem;padding:16px 28px;color:white;border-color:rgba(255,255,255,.3);" onclick="openPayment('KitaShift·KI Pro','CHF 18 / Monat','pro-monthly')">
+      ✦ Pro-Version freischalten
+    </button>
+  </div>
+  <p style="font-size:.8rem;color:rgba(255,255,255,.4);">Auch auf <a href="https://www.save-house.store" target="_blank" style="color:rgba(255,255,255,.5);">save-house.store</a> und <a href="https://www.save-house.shop" target="_blank" style="color:rgba(255,255,255,.5);">save-house.shop</a> erhältlich</p>
+</section>
+
 <footer>
-  <div><strong>KitaShift·KI</strong> · © 2026 · save-house.de</div>
+  <div style="margin-bottom:16px;">
+    <strong>KitaShift·KI</strong> · © 2026 BDS Bieler Distribution Service · Matthias Bieler · Dessau-Roßlau
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:16px;font-size:.82rem;">
+    <span style="color:rgba(255,255,255,.4);">Auch erhältlich auf:</span>
+    <a href="https://kitaplan.save-house.de" style="color:rgba(255,255,255,.6);">kitaplan.save-house.de</a>
+    <span style="color:rgba(255,255,255,.2)">·</span>
+    <a href="https://www.save-house.store" target="_blank" style="color:rgba(255,255,255,.6);">save-house.store</a>
+    <span style="color:rgba(255,255,255,.2)">·</span>
+    <a href="https://www.save-house.shop" target="_blank" style="color:rgba(255,255,255,.6);">save-house.shop</a>
+    <span style="color:rgba(255,255,255,.2)">·</span>
+    <span style="color:rgba(255,255,255,.4);">Google Play <em style="font-size:.75em">(demnächst)</em></span>
+  </div>
   <div class="footer-links">
     <a href="legal.html">Datenschutz</a>
     <a href="legal.html">Impressum</a>
-    <a href="#">Kontakt</a>
-    <a href="#">Reseller</a>
+    <a href="mailto:info@save-house.de">info@save-house.de</a>
+    <a href="app.html" download="KitaShiftKI.html">⬇️ App herunterladen</a>
+    <a href="app.html" target="_blank">App starten</a>
   </div>
 </footer>
 
