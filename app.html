@@ -683,11 +683,11 @@ setTimeout(() => {
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
             <div class="az-field">
               <label>Von</label>
-              <input type="time" id="openTime" value="06:45" onchange="onAzChange()" />
+              <input type="time" id="openTime" value="06:45" onchange="onOpenTimesChange()" />
             </div>
             <div class="az-field">
               <label>Bis</label>
-              <input type="time" id="closeTime" value="18:15" onchange="onAzChange()" />
+              <input type="time" id="closeTime" value="18:15" onchange="onOpenTimesChange()" />
             </div>
           </div>
         </div>
@@ -2315,6 +2315,42 @@ function onAzChange() {
   const clf = document.getElementById('az_randSpaet_end');
   if (orf) document.getElementById('openTime').value  = orf.value;
   if (clf) document.getElementById('closeTime').value = clf.value;
+}
+
+// Wenn Öffnungszeiten geändert werden → alle Schichten automatisch anpassen
+function onOpenTimesChange() {
+  const open  = document.getElementById('openTime').value;   // z.B. "07:00"
+  const close = document.getElementById('closeTime').value;  // z.B. "17:30"
+  if (!open || !close) return;
+
+  const openMin  = timeToMin(open);
+  const closeMin = timeToMin(close);
+  const totalMin = closeMin - openMin;
+
+  // Rand = erste und letzte Stunde
+  const randEnd   = minToTime(openMin + 60);   // Open + 1h
+  const randStart = minToTime(closeMin - 60);  // Close - 1h
+
+  // Kernzeiten: zwischen den Randzeiten aufteilen
+  const kernStart = randEnd;                    // = Open + 1h
+  const kernEnd   = randStart;                  // = Close - 1h
+  const kernMitte = totalMin / 2;
+  const mitteStart = minToTime(openMin + 105);  // Open + 1h45 (etwas versetzt)
+  const spaetStart = minToTime(openMin + 150);  // Open + 2h30
+
+  // Felder setzen
+  document.getElementById('az_randFrueh_start').value = open;
+  document.getElementById('az_randFrueh_end').value   = randEnd;
+  document.getElementById('az_kernFrueh_start').value = randEnd;
+  document.getElementById('az_kernFrueh_end').value   = minToTime(closeMin - 90); // Close - 1h30
+  document.getElementById('az_kernMitte_start').value = mitteStart;
+  document.getElementById('az_kernMitte_end').value   = randStart;
+  document.getElementById('az_kernSpaet_start').value = spaetStart;
+  document.getElementById('az_kernSpaet_end').value   = randStart;
+  document.getElementById('az_randSpaet_start').value = randStart;
+  document.getElementById('az_randSpaet_end').value   = close;
+
+  onAzChange();
 }
 
 function toggleAzPanel() {
