@@ -1584,8 +1584,47 @@ function toggleUrlaub(idx, checked) {
   if (!checked) {
     staffData[idx].urlaubVon = null;
     staffData[idx].urlaubBis = null;
+  } else {
+    // Standard: aktuelle Woche als Urlaub vorschlagen
+    const startInput = document.getElementById('startDate');
+    if (startInput && startInput.value) {
+      const mon = new Date(startInput.value);
+      const fri = new Date(mon.getTime() + 4 * 86400000);
+      staffData[idx].urlaubVon = mon;
+      staffData[idx].urlaubBis = fri;
+      const vonEl = document.getElementById('urlaubVon-' + idx);
+      const bisEl = document.getElementById('urlaubBis-' + idx);
+      if (vonEl) vonEl.value = mon.toISOString().split('T')[0];
+      if (bisEl) bisEl.value = fri.toISOString().split('T')[0];
+    }
   }
-  renderStaffPreview();
+  // Status-Pill aktualisieren ohne ganzen re-render
+  updateStaffItemStatus(idx);
+}
+
+function updateStaffItemStatus(idx) {
+  const s = staffData[idx];
+  const item = document.getElementById('staff-item-' + idx);
+  if (!item) return;
+  const pills = item.querySelectorAll('.pill');
+  if (pills.length === 0) return;
+  const pill = pills[0];
+  const startInput = document.getElementById('startDate');
+  const weekStart = startInput && startInput.value ? new Date(startInput.value) : new Date();
+  if (s.krank) {
+    pill.className = 'pill pill-danger'; pill.innerHTML = '🤒 Krank';
+  } else if (s.urlaubVon && s.urlaubBis) {
+    const we = new Date(weekStart); we.setDate(we.getDate()+4);
+    if (s.urlaubVon <= we && s.urlaubBis >= weekStart) {
+      pill.className = 'pill pill-warn'; pill.innerHTML = '🏖️ Urlaub';
+    } else {
+      pill.className = 'pill pill-ok'; pill.innerHTML = '✓ OK';
+    }
+  } else if (s.schulung) {
+    pill.className = 'pill pill-warn'; pill.innerHTML = '📋 ' + s.schulung;
+  } else {
+    pill.className = 'pill pill-ok'; pill.innerHTML = '✓ OK';
+  }
 }
 
 function setUrlaubDate(idx) {
@@ -1593,7 +1632,7 @@ function setUrlaubDate(idx) {
   const bis = document.getElementById('urlaubBis-' + idx)?.value;
   staffData[idx].urlaubVon = von ? new Date(von) : null;
   staffData[idx].urlaubBis = bis ? new Date(bis) : null;
-  renderStaffPreview();
+  updateStaffItemStatus(idx);
 }
 
 function getStaffStatus(s, weekStart) {
@@ -3705,10 +3744,11 @@ function applyTemplate(idx) {
 
 function showModal(html) {
   const div = document.createElement('div');
+  div.id = 'kitaModal';
   div.style = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;';
   div.innerHTML = `<div style="background:white;border-radius:16px;padding:28px;max-width:820px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);">
     ${html}
-    <button onclick="this.closest('div[style*=fixed]').remove()" class="btn btn-outline" style="margin-top:16px;">✕ Schliessen</button>
+    <button onclick="document.getElementById('kitaModal').remove()" class="btn btn-outline" style="margin-top:16px;">✕ Schliessen</button>
   </div>`;
   div.addEventListener('click', e => { if (e.target === div) div.remove(); });
   document.body.appendChild(div);
