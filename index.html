@@ -716,10 +716,7 @@ footer strong{color:white;}
           <span style="display:flex;align-items:center;gap:4px;">
             <span class="bank-val" id="bank-ref">KitaShift·KI – <span id="bank-ref-product">Pro</span></span>
             <button class="copy-btn" onclick="copyText('bank-ref')">Kopieren</button>
-          </span>
-        </div>
-
-        <div style="background:#dcfce7;border-radius:6px;padding:10px 12px;margin-top:10px;font-size:.78rem;color:#15803d;">
+     rem;color:#15803d;">
           ✅ Nach Zahlungseingang (1–2 Werktage) erhalten Sie den Download-Link per E-Mail.<br/>
           📧 Bitte senden Sie nach der Überweisung eine kurze E-Mail an:
           <!-- ✏️ HIER DEINE E-MAIL EINTRAGEN -->
@@ -791,8 +788,6 @@ function openPayment(productName, productPrice, productKey) {
     klBtn.onclick = () => { alert('Klarna ist aktuell nicht verfügbar.\nBitte nutzen Sie PayPal oder Banküberweisung.'); };
   }
 
-  // Placeholder hint removed
-
   // Show modal
   document.getElementById('payModal').classList.add('active');
   document.body.style.overflow = 'hidden';
@@ -860,4 +855,18 @@ function calcTimeSaved() {
 
   document.getElementById('calcSavedHours').textContent = savedHoursYear + ' Stunden';
   document.getElementById('calcSavedMoney').textContent = currency + ' ' + savedMoney.toLocaleString('de-DE');
-  document.get
+  document.getElementById('calcCost').textContent = currency + ' ' + yearCost + '/Jahr';
+  document.getElementById('calcROI').textContent = roi + '× Return on Investment';
+}
+
+// Smooth scroll for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+</script>
+</body>
+</html>
