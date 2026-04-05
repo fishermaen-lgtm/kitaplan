@@ -5,8 +5,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>KitaShift·KI – KI-Dienstplaner für Kitas in der Schweiz & DACH</title>
 <meta name="description" content="Der erste KI-gestützte Dienstplaner für Kitas in CH, DE & AT. CH ArG, DE ArbZG, AT AZG konform. Alle 26 Kantone, 16 Bundesländer & 9 AT-Bundesländer. Excel-Import, KI-Planung."/>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link rel="preload" href="/fonts/dm-sans-v15-latin-regular.woff2" as="font" type="font/woff2" crossorigin/>
+<link rel="preload" href="/fonts/fraunces-v31-latin-700.woff2" as="font" type="font/woff2" crossorigin/>
+<style>
+@font-face{font-family:'Fraunces';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/fraunces-v31-latin-regular.woff2') format('woff2');}
+@font-face{font-family:'Fraunces';font-style:normal;font-weight:700;font-display:swap;src:url('/fonts/fraunces-v31-latin-700.woff2') format('woff2');}
+@font-face{font-family:'Fraunces';font-style:normal;font-weight:900;font-display:swap;src:url('/fonts/fraunces-v31-latin-900.woff2') format('woff2');}
+@font-face{font-family:'DM Sans';font-style:normal;font-weight:300;font-display:swap;src:url('/fonts/dm-sans-v15-latin-300.woff2') format('woff2');}
+@font-face{font-family:'DM Sans';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/dm-sans-v15-latin-regular.woff2') format('woff2');}
+@font-face{font-family:'DM Sans';font-style:normal;font-weight:500;font-display:swap;src:url('/fonts/dm-sans-v15-latin-500.woff2') format('woff2');}
+@font-face{font-family:'DM Sans';font-style:normal;font-weight:600;font-display:swap;src:url('/fonts/dm-sans-v15-latin-600.woff2') format('woff2');}
+</style>
 <style>
 :root {
   --ink:    #0f1923;
@@ -553,10 +562,10 @@ footer strong{color:white;}
 <!-- PASSIVES EINKOMMEN -->
 <!-- Reseller-Sektion entfernt -->
 
-<!-- TESTIMONIALS (fiktiv, für Produkt-Mockup) -->
+<!-- TESTIMONIALS (Beta-Feedback) -->
 <section>
-  <div class="section-label">Stimmen aus der Praxis</div>
-  <h2 class="section-h2">Was Kita-Leitungen sagen</h2>
+  <div class="section-label">Feedback aus der Beta-Phase</div>
+  <h2 class="section-h2">Was Beta-Tester sagen</h2>
   <div class="testi-grid" style="margin-top:32px;">
     <div class="testi-card">
       <div class="testi-stars">★★★★★</div>
@@ -628,7 +637,7 @@ footer strong{color:white;}
     <div style="font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Bestellung</div>
     <div class="modal-product">
       <div class="modal-product-name" id="modal-product-name">KitaShift·KI Pro – Monatlich</div>
-      <div class="modal-product-price" id="modal-product-price">CHF 18 / Mo</div>
+      <div class="modal-product-price" id="modal-product-price">CHF 12 / Mo</div>
     </div>
 
     <h3>Zahlungsmethode wählen</h3>
@@ -646,14 +655,14 @@ footer strong{color:white;}
         <span style="margin-left:auto;font-size:.78rem;color:#003087;font-weight:700;">→</span>
       </button>
 
-      <!-- KLARNA -->
-      <button class="pay-btn klarna" id="klarna-btn" type="button">
+      <!-- KLARNA (deaktiviert — noch nicht angebunden) -->
+      <button class="pay-btn klarna" id="klarna-btn" type="button" style="opacity:.45;pointer-events:none;cursor:default;">
         <span class="pay-icon">🛍️</span>
         <span class="pay-label">
           <span class="pay-name" style="color:#1a0a2e;">Klarna</span>
-          <span class="pay-desc">Jetzt kaufen, später bezahlen · 0% Zinsen</span>
+          <span class="pay-desc">Demnächst verfügbar</span>
         </span>
-        <span style="margin-left:auto;font-size:.78rem;color:#1a0a2e;font-weight:700;">→</span>
+        <span style="margin-left:auto;font-size:.78rem;color:#1a0a2e;font-weight:700;">—</span>
       </button>
 
       <!-- BANKÜBERWEISUNG -->
@@ -728,12 +737,7 @@ footer strong{color:white;}
       <div class="modal-trust-item">↩️ 14 Tage Rückgabe</div>
     </div>
 
-    <!-- Hinweis für Platzhalter -->
-    <div id="placeholder-hint" style="background:#fff3cd;border:1px dashed #f59e0b;border-radius:8px;padding:10px 14px;margin-top:14px;font-size:.78rem;color:#92400e;display:none;">
-      ⚠️ <strong>Für dich (Entwickler-Hinweis):</strong> Ersetze die markierten Felder mit deinen echten Daten:<br/>
-      <code>DEIN NAME / FIRMA</code> · <code>DE__ IBAN</code> · <code>BIC</code> · <code>info@save-house.de</code><br/>
-      PayPal- &amp; Klarna-Links: Öffne <code>index.html</code> auf GitHub → Bearbeiten → Suche nach <code>PAYPAL_LINK_</code>
-    </div>
+
 
   </div>
 </div>
@@ -787,9 +791,7 @@ function openPayment(productName, productPrice, productKey) {
     klBtn.onclick = () => { alert('Klarna ist aktuell nicht verfügbar.\nBitte nutzen Sie PayPal oder Banküberweisung.'); };
   }
 
-  // Show developer hint only if placeholder links still exist
-  const hasPlaceholders = false; // Alle Zahlungsdaten eingetragen
-  document.getElementById('placeholder-hint').style.display = hasPlaceholders ? 'block' : 'none';
+  // Placeholder hint removed
 
   // Show modal
   document.getElementById('payModal').classList.add('active');
@@ -858,18 +860,4 @@ function calcTimeSaved() {
 
   document.getElementById('calcSavedHours').textContent = savedHoursYear + ' Stunden';
   document.getElementById('calcSavedMoney').textContent = currency + ' ' + savedMoney.toLocaleString('de-DE');
-  document.getElementById('calcCost').textContent = currency + ' ' + yearCost + '/Jahr';
-  document.getElementById('calcROI').textContent = roi + '× Return on Investment';
-}
-
-// Smooth scroll for anchor links
-document.querySelectorAll('a[href^="#"]').forEach(a => {
-  a.addEventListener('click', e => {
-    e.preventDefault();
-    const target = document.querySelector(a.getAttribute('href'));
-    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-});
-</script>
-</body>
-</html>
+  document.get

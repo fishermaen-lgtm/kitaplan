@@ -26,10 +26,8 @@
 | Plan | Preis | Zielgruppe |
 |---|---|---|
 | **KitaShift·KI Free** | CHF 0 | bis 5 MA, dauerhaft kostenlos |
-| **KitaShift·KI Pro** | CHF 18/Mo · CHF 154/Jahr | bis 20 MA, KI-Vollzugang |
-| **KitaShift·KI Träger** | CHF 48/Mo | bis 3 Standorte, White-Label |
-| **Einmallizenz Solo** | CHF 79 | lebenslang, bis 5 MA |
-| **Einmallizenz Pro** | CHF 149 | lebenslang, bis 20 MA |
+| **KitaShift·KI Pro** | CHF 12/Mo · CHF 119/Jahr | bis 20 MA, KI-Vollzugang |
+| **KitaShift·KI Träger** | CHF 39/Mo · CHF 349/Jahr | bis 3 Standorte |
 
 ## Features
 

@@ -3,7 +3,7 @@
 // © 2026 BDS Bieler Distribution Service
 // ─────────────────────────────────────────────
 
-const CACHE_NAME = 'kitashift-v1.1';
+const CACHE_NAME = 'kitashift-v1.2';
 const ASSETS_TO_CACHE = [
   '/app.html',
   '/index.html',
@@ -11,7 +11,9 @@ const ASSETS_TO_CACHE = [
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
-  'https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap',
+  '/fonts/dm-sans-v15-latin-regular.woff2',
+  '/fonts/dm-sans-v15-latin-500.woff2',
+  '/fonts/dm-sans-v15-latin-700.woff2',
   'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'
 ];
 
